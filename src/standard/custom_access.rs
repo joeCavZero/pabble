@@ -1,22 +1,15 @@
 use penguin::prelude::*;
 
 pub fn register_custom_accesses(peng: &mut PengEnv, unit: &mut PengUnit) {
-    unit.register_custom_access(peng, "len", len)
-        .unwrap();
-    unit.register_custom_access(peng, "sum", sum)
-        .unwrap();
-    unit.register_custom_access(peng, "push", push)
-        .unwrap();
-    unit.register_custom_access(peng, "keys", keys)
-        .unwrap();
-    unit.register_custom_access(peng, "resume", resume)
-        .unwrap();
-    unit.register_custom_access(peng, "pause", pause)
-        .unwrap();
-    unit.register_custom_access(peng, "cancel", cancel)
-        .unwrap();
-    unit.register_custom_access(peng, "state", state)
-        .unwrap();
+    unit.register_custom_access(peng, "len", len).unwrap();
+    unit.register_custom_access(peng, "sum", sum).unwrap();
+    unit.register_custom_access(peng, "push", push).unwrap();
+    unit.register_custom_access(peng, "keys", keys).unwrap();
+    unit.register_custom_access(peng, "resume", resume).unwrap();
+    unit.register_custom_access(peng, "pause", pause).unwrap();
+    unit.register_custom_access(peng, "cancel", cancel).unwrap();
+    unit.register_custom_access(peng, "state", state).unwrap();
+    unit.register_custom_access(peng, "join", join).unwrap();
 }
 
 pub fn len(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -251,9 +244,10 @@ pub fn state(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, 
                 PengThreadState::Running => "running",
                 PengThreadState::Finished => "finished",
                 PengThreadState::Paused => "paused",
-                PengThreadState::Waiting => "waiting",
+                PengThreadState::Waiting(_) => "waiting",
                 PengThreadState::Cancelled => "cancelled",
                 PengThreadState::Failed => "failed",
+                PengThreadState::Sleeping(_) => "sleeping",
             },
 
             _ => {
@@ -271,4 +265,68 @@ pub fn state(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, 
         .create_heap_value(PengValue::Box(PengBox::String(state.to_string())));
 
     Ok(PengBinded::Mutable(PengCell::Reference(ptr)))
+}
+
+pub fn join(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+    let target_ptr = match ctx.get_arg_cell(0) {
+        Some(arg) => match arg.value() {
+            PengCell::Reference(ptr) => *ptr,
+
+            _ => {
+                return Err(PengError::CannotCallValue(
+                    "threads:join() expected thread".into(),
+                ));
+            }
+        },
+
+        None => {
+            return Err(PengError::CannotCallValue(
+                "threads:join() expected thread".into(),
+            ));
+        }
+    };
+
+    match ctx.get_value(target_ptr) {
+        Some(PengValue::Box(PengBox::Thread(thread))) => {
+            match &thread.result {
+                PengThreadResult::Returned(value) => {
+                    return Ok(value.clone());
+                }
+
+                PengThreadResult::Failed(e) => {
+                    return Err((**e).clone());
+                }
+
+                PengThreadResult::Pending => {}
+            }
+        }
+
+        Some(_) => {
+            return Err(PengError::CannotCallValue(
+                "threads:join() expected thread".into(),
+            ));
+        }
+
+        None => {
+            return Err(PengError::ThreadNotFound(target_ptr));
+        }
+    }
+
+    match ctx.set_current_thread_state(PengThreadState::Waiting(target_ptr)) {
+        Ok(_) => {}
+
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
+    match ctx.yield_now() {
+        Ok(_) => {}
+
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
+    Ok(PengBinded::Mutable(PengCell::Nil))
 }
