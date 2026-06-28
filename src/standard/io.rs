@@ -1,8 +1,8 @@
 use penguin::prelude::*;
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
-    let mut io = PengUnit::library();
+    let mut module = PengUnit::library();
 
-    io.register_native_function(peng, "println", move |ctx| {
+    module.register_native_function(peng, "println", move |ctx| {
         let mut index = 0usize;
 
         loop {
@@ -25,7 +25,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     })
     .unwrap();
 
-    io
+    module
 }
 fn print_cell(ctx: &PengNativeFunctionCallContext, cell: &PengCell) {
     match cell {

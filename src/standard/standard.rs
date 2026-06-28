@@ -1,22 +1,33 @@
 use penguin::prelude::*;
-use crate::standard::*;
-use std::collections::HashMap;
+use crate::standard::{custom_access::register_custom_accesses, *};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    rc::Rc,
+};
 
-pub type StdRegistry = HashMap<String, PengUnit>;
+pub type PebbleStdRegistry = HashMap<String, PengUnit>;
 
-pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<StdRegistry, PengError> {
+pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistry, PengError> {
     let mut registry = HashMap::new();
 
     let io = io::setup(peng);
     registry.insert("io".to_string(), io);
 
-    import::setup(peng, unit, registry.clone());
+    let thread = thread::setup(peng);
+    registry.insert("threads".to_string(), thread);
 
-    match unit.register_native_operation(peng, "impl", implements::implements) {
-        Ok(()) => {}
-        Err(e) => return Err(e),
-    }
+    let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
-    Ok(registry)
+    import::setup(
+        peng,
+        unit,
+        registry.clone(),
+        import_cache,
+    ).unwrap();
+
+    unit.register_native_operation(peng, "impl", operations::implements).unwrap();
+    register_custom_accesses(peng, unit);
+
+Ok(registry)
 }
-
