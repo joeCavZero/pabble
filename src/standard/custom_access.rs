@@ -10,6 +10,8 @@ pub fn register_custom_accesses(peng: &mut PengEnv, unit: &mut PengUnit) {
     unit.register_custom_access(peng, "cancel", cancel).unwrap();
     unit.register_custom_access(peng, "state", state).unwrap();
     unit.register_custom_access(peng, "join", join).unwrap();
+    unit.register_custom_access(peng, "get", get).unwrap();
+    unit.register_custom_access(peng, "is_finished", is_finished).unwrap();
 }
 
 pub fn len(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -329,4 +331,154 @@ pub fn join(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, P
     }
 
     Ok(PengBinded::Mutable(PengCell::Nil))
+}
+
+pub fn get(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+    let receiver = match ctx.get_arg_cell(0) {
+        Some(cell) => cell.clone(),
+        None => {
+            return Err(PengError::CannotCallValue(
+                "get() expected receiver".into(),
+            ));
+        }
+    };
+
+    let default = match ctx.get_arg_cell(2) {
+        Some(cell) => cell.clone(),
+        None => PengBinded::Mutable(PengCell::Nil),
+    };
+
+    let key_name_ptr = match ctx.get_arg_cell(1) {
+        Some(cell) => {
+            match cell.value() {
+                PengCell::Reference(ptr) => {
+                    let string = match ctx.get_value(*ptr) {
+                        Some(PengValue::Box(PengBox::String(s))) => s.clone(),
+                        Some(_) => String::new(),
+                        None => return Err(PengError::HeapValueNotFound(*ptr)),
+                    };
+
+                    if string.is_empty() {
+                        None
+                    } else {
+                        Some(ctx.env_mut().ensure_pooled_name_ptr(string))
+                    }
+                }
+
+                _ => None,
+            }
+        }
+
+        None => None,
+    };
+
+    let key_index = match ctx.get_arg_cell(1) {
+        Some(cell) => {
+            match cell.value() {
+                PengCell::Int(v) => {
+                    if *v < 0 {
+                        None
+                    } else {
+                        Some(*v as usize)
+                    }
+                }
+
+                PengCell::Uint(v) => Some(*v),
+
+                _ => None,
+            }
+        }
+
+        None => None,
+    };
+
+    let receiver_ptr = match receiver.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Ok(receiver);
+        }
+    };
+
+    match ctx.get_value(receiver_ptr) {
+        Some(PengValue::Box(PengBox::Thread(thread))) => {
+            match &thread.result {
+                PengThreadResult::Returned(cell) => Ok(cell.clone()),
+                PengThreadResult::Pending => Ok(default),
+                PengThreadResult::Failed(e) => Err((**e).clone()),
+            }
+        }
+
+        Some(PengValue::Box(PengBox::Vector(vector))) => {
+            let index = match key_index {
+                Some(i) => i,
+                None => return Ok(default),
+            };
+
+            match vector.values.get(index) {
+                Some(value) => Ok(value.clone()),
+                None => Ok(default),
+            }
+        }
+
+        Some(PengValue::Box(PengBox::Object(object))) => {
+            let name = match key_name_ptr {
+                Some(name) => name,
+                None => return Ok(default),
+            };
+
+            match object.fields.get(&name) {
+                Some(value) => Ok(value.clone()),
+                None => Ok(default),
+            }
+        }
+
+        Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {
+            let name = match key_name_ptr {
+                Some(name) => name,
+                None => return Ok(default),
+            };
+
+            match custom_type.fields.get(&name) {
+                Some(value) => Ok(value.clone()),
+                None => Ok(default),
+            }
+        }
+
+        Some(_) => Ok(default),
+
+        None => Err(PengError::HeapValueNotFound(receiver_ptr)),
+    }
+}
+
+pub fn is_finished(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+    let receiver = match ctx.get_arg_cell(0) {
+        Some(cell) => cell,
+
+        None => {
+            return Err(PengError::CannotCallValue(
+                "is_finished() expected receiver".into(),
+            ));
+        }
+    };
+    let receiver_ptr = match receiver.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::ExpectedThread);
+        }
+    };
+
+    match ctx.get_value(receiver_ptr) {
+        Some(PengValue::Box(PengBox::Thread(thread))) => {
+            Ok(PengBinded::Mutable(PengCell::Bool(matches!(
+                thread.state,
+                PengThreadState::Finished
+            ))))
+        }
+
+        Some(_) => Err(PengError::ExpectedThread),
+
+        None => Err(PengError::ThreadNotFound(receiver_ptr)),
+    }
 }
