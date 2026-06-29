@@ -1,6 +1,29 @@
 use penguin::prelude::*;
+
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
+
+    module.register_native_function(peng, "print", move |ctx| {
+        let mut index = 0usize;
+
+        loop {
+            let arg = match ctx.get_arg_cell(index) {
+                Some(arg) => arg,
+                None => break,
+            };
+
+            if index > 0 {
+                print!(" ");
+            }
+
+            print_binded_cell(ctx, arg);
+            index += 1;
+        }
+
+        Ok(PengBindedCell::Mutable(PengCell::Nil))
+    })
+    .unwrap();
+
 
     module.register_native_function(peng, "println", move |ctx| {
         let mut index = 0usize;
@@ -24,6 +47,29 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         Ok(PengBindedCell::Mutable(PengCell::Nil))
     })
     .unwrap();
+
+
+    module.register_native_function(peng, "input", move |ctx| {
+        let mut buffer = String::new();
+
+        match std::io::stdin().read_line(&mut buffer) {
+            Ok(_) => {}
+
+            Err(_) => {
+                return Err(PengError::CannotCallValue(
+                    "io:input() failed to read stdin".into(),
+                ));
+            }
+        }
+
+        while buffer.ends_with('\n') || buffer.ends_with('\r') {
+            buffer.pop();
+        }
+
+        let ptr = ctx.create_box(PengBox::String(buffer));
+
+        Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
+    }).unwrap();
 
     module
 }

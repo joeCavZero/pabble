@@ -11,11 +11,13 @@ pub type PebbleStdRegistry = HashMap<String, PengUnit>;
 pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistry, PengError> {
     let mut registry = HashMap::new();
 
-    let io = io::setup(peng);
-    registry.insert("io".to_string(), io);
+    registry.insert("io".to_string(), io::setup(peng));
 
-    let thread = thread::setup(peng);
-    registry.insert("threads".to_string(), thread);
+    registry.insert("threads".to_string(), thread::setup(peng));
+
+    registry.insert("random".to_string(), random::setup(peng));
+
+    registry.insert("convert".to_string(), convert::setup(peng));
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 

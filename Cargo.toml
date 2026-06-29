@@ -5,6 +5,6 @@ edition = "2024"
 
 [dependencies]
 penguin = { path = "../penguin" }
-rand = "*"
+rand = "0.10.1"
 colored = "3.0.0"
 supports-color = "3.0.2"
