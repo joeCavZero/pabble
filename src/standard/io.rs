@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 use penguin::prelude::*;
 
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
@@ -19,7 +21,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
             print_binded_cell(ctx, arg);
             index += 1;
         }
-
+        io::stdout().flush().unwrap();
         Ok(PengBindedCell::Mutable(PengCell::Nil))
     })
     .unwrap();
