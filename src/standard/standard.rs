@@ -21,15 +21,16 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
+    unit.register_native_operation(peng, "impl", operations::implements)?;
+
+    register_custom_accesses(peng, unit);
+
     import::setup(
         peng,
         unit,
         registry.clone(),
         import_cache,
-    ).unwrap();
+    )?;
 
-    unit.register_native_operation(peng, "impl", operations::implements).unwrap();
-    register_custom_accesses(peng, unit);
-
-Ok(registry)
+    Ok(registry)
 }
