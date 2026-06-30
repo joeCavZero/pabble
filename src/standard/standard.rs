@@ -21,6 +21,9 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
     
     registry.insert("fs".to_string(), fs::setup(peng));
 
+    registry.insert("http".to_string(), http::setup(peng));
+
+
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
     unit.register_native_operation(peng, "impl", operations::implements).unwrap();
