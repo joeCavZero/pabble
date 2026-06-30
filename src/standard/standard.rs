@@ -23,7 +23,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
-    unit.register_native_operation(peng, "impl", operations::implements)?;
+    unit.register_native_operation(peng, "impl", operations::implements).unwrap();
 
     register_custom_accesses(peng, unit);
 
@@ -32,7 +32,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
         unit,
         registry.clone(),
         import_cache,
-    )?;
+    ).unwrap();
 
     Ok(registry)
 }

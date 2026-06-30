@@ -2,6 +2,8 @@ use std::io::{self, Read, Write};
 
 use penguin::prelude::*;
 
+type NativeResult = Result<PengBindedCell, PengError>;
+
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
@@ -24,48 +26,62 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     module
 }
 
-fn print(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn print(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     print_args(&ctx);
-    io::stdout().flush().unwrap();
 
-    Ok(PengBindedCell::Mutable(PengCell::Nil))
+    match io::stdout().flush() {
+        Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Nil)),
+        Err(_) => Err(PengError::CannotCallValue(
+            "io:print() failed to flush stdout".into(),
+        )),
+    }
 }
 
-fn println(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn println(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     print_args(&ctx);
     println!();
 
     Ok(PengBindedCell::Mutable(PengCell::Nil))
 }
 
-fn eprint(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn eprint(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     eprint_args(&ctx);
-    io::stderr().flush().unwrap();
 
-    Ok(PengBindedCell::Mutable(PengCell::Nil))
+    match io::stderr().flush() {
+        Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Nil)),
+        Err(_) => Err(PengError::CannotCallValue(
+            "io:eprint() failed to flush stderr".into(),
+        )),
+    }
 }
 
-fn eprintln(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn eprintln(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     eprint_args(&ctx);
     eprintln!();
 
     Ok(PengBindedCell::Mutable(PengCell::Nil))
 }
 
-fn flush(_: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    io::stdout().flush().map_err(|_| {
-        PengError::CannotCallValue("io:flush() failed to flush stdout".into())
-    })?;
-
-    Ok(PengBindedCell::Mutable(PengCell::Nil))
+fn flush(_: &mut PengNativeFunctionCallContext) -> NativeResult {
+    match io::stdout().flush() {
+        Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Nil)),
+        Err(_) => Err(PengError::CannotCallValue(
+            "io:flush() failed to flush stdout".into(),
+        )),
+    }
 }
 
-fn read_line(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn read_line(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     let mut buffer = String::new();
 
-    io::stdin().read_line(&mut buffer).map_err(|_| {
-        PengError::CannotCallValue("io:read_line() failed to read stdin".into())
-    })?;
+    match io::stdin().read_line(&mut buffer) {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(PengError::CannotCallValue(
+                "io:read_line() failed to read stdin".into(),
+            ));
+        }
+    }
 
     while buffer.ends_with('\n') || buffer.ends_with('\r') {
         buffer.pop();
@@ -76,19 +92,24 @@ fn read_line(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, 
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
 }
 
-fn read_all(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn read_all(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     let mut buffer = String::new();
 
-    io::stdin().read_to_string(&mut buffer).map_err(|_| {
-        PengError::CannotCallValue("io:read_all() failed to read stdin".into())
-    })?;
+    match io::stdin().read_to_string(&mut buffer) {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(PengError::CannotCallValue(
+                "io:read_all() failed to read stdin".into(),
+            ));
+        }
+    }
 
     let ptr = ctx.create_box(PengBox::String(buffer));
 
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
 }
 
-fn read_byte(_: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn read_byte(_: &mut PengNativeFunctionCallContext) -> NativeResult {
     let mut buffer = [0u8; 1];
 
     match io::stdin().read(&mut buffer) {
@@ -101,14 +122,15 @@ fn read_byte(_: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
     }
 }
 
-fn clear_screen(_: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn clear_screen(_: &mut PengNativeFunctionCallContext) -> NativeResult {
     print!("\x1B[2J\x1B[1;1H");
 
-    io::stdout().flush().map_err(|_| {
-        PengError::CannotCallValue("io:clear_screen() failed to flush stdout".into())
-    })?;
-
-    Ok(PengBindedCell::Mutable(PengCell::Nil))
+    match io::stdout().flush() {
+        Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Nil)),
+        Err(_) => Err(PengError::CannotCallValue(
+            "io:clear_screen() failed to flush stdout".into(),
+        )),
+    }
 }
 
 fn print_args(ctx: &PengNativeFunctionCallContext) {
