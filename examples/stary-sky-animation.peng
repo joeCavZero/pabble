@@ -1,0 +1,30 @@
+import("io") as io
+import("threads") as threads
+
+func main() {
+    var sky = [
+        "✦      ·      ✧       ·      ✦",
+        "   ·      ✦       ·      ✧    ",
+        "✧      ·       ✦      ·       ",
+        "    ✦      ·      ✧      ·    ",
+        "·       ✧      ·      ✦       ",
+        "      ·      ✦       ·      ✧ ",
+        "✦       ·      ✧      ·       ",
+        "   ✧      ·       ✦      ·    ",
+        "·      ✦       ·      ✧       ",
+        "      ·      ✧      ·      ✦  "
+    ]
+
+    while true {
+        for (var offset = 0 as uint; offset < sky.len(); offset += 1u) {
+            io:print("\x1B[H")
+
+            for (var i = 0 as uint; i < sky.len(); i += 1u) {
+                var line = sky[(i + offset) % sky.len()]
+                io:println(line)
+            }
+
+            threads:sleep(150)
+        }
+    }
+}

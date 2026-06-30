@@ -1,0 +1,42 @@
+import("io") as io
+import("threads") as threads
+
+func worker(name, delay, steps, result) {
+    io:println(name, "started")
+
+    for (var i = 1; i <= steps; i += 1) {
+        io:println(name, "step", i, "of", steps)
+        threads:sleep(delay)
+    }
+
+    io:println(name, "finished")
+
+    return result
+}
+
+func main() {
+    io:println("== Thread Example ==")
+
+    var fast = threads:spawn(worker, "fast", 150, 5, 100)
+    var slow = threads:spawn(worker, "slow", 300, 3, "penguin")
+
+    while !fast.is_finished() || !slow.is_finished() {
+        io:println(
+            "Status:",
+            "fast =", fast.is_finished(),
+            "| slow =", slow.is_finished()
+        )
+
+        threads:sleep(200)
+    }
+
+    io:println("== All threads finished ==")
+
+    io:println("Fast thread result:")
+    io:println(fast.get())
+
+    io:println("Slow thread result:")
+    io:println(slow.get())
+
+    io:println("Done.")
+}

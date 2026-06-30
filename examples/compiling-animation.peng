@@ -1,0 +1,33 @@
+import("io") as io
+import("threads") as threads
+import("convert") as convert
+
+func clear_line() {
+    io:print("\r")
+}
+
+func main() {
+    var frames = ["|", "/", "-", "\\"]
+    
+    io:println("Carregando Penguin...")
+
+    for (var i = 0; i < 40; i += 1) {
+        clear_line()
+
+        var frame_index = i % convert:integer(frames.len())
+        var frame = frames[frame_index]
+
+        io:print("Compilando ")
+        io:print(frame)
+        io:print(" ")
+
+        for (var j = 0; j < i % 10; j += 1) {
+            io:print(".")
+        }
+
+        threads:sleep(100)
+    }
+
+    clear_line()
+    io:println("Compilando Penguin... pronto!")
+}

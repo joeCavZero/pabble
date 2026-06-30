@@ -1,0 +1,97 @@
+import("io") as io
+import("fs") as fs
+
+func main() {
+    io:println("===== FS MODULE TEST =====")
+
+    var original_dir = fs:current_dir()
+    io:println("current dir:", original_dir)
+
+    var base = fs:join(original_dir, "pebble_fs_demo")
+    var nested = fs:join(base, "nested")
+    var file = fs:join(base, "hello.txt")
+    var copy_file = fs:join(base, "copy.txt")
+    var renamed_file = fs:join(base, "renamed.txt")
+
+    io:println("base:", base)
+
+    if fs:exists(base) {
+        io:println("cleaning old demo folder...")
+        fs:remove_dir_all(base)
+    }
+
+    io:println("creating dirs...")
+    fs:create_dir(base)
+    fs:create_dir_all(nested)
+
+    io:println("exists base:", fs:exists(base))
+    io:println("is dir base:", fs:is_dir(base))
+    io:println("is file base:", fs:is_file(base))
+
+    io:println("writing file...")
+    fs:write(file, "Hello from Penguin\n")
+
+    io:println("appending file...")
+    fs:append(file, "This line was appended\n")
+    fs:append(file, "Penguin FS works!\n")
+
+    io:println("file exists:", fs:exists(file))
+    io:println("is file:", fs:is_file(file))
+    io:println("file size:", fs:file_size(file))
+
+    io:println("reading file:")
+    var content = fs:read(file)
+    io:println(content)
+
+    io:println("path helpers:")
+    io:println("absolute:", fs:absolute(file))
+    io:println("canonicalize:", fs:canonicalize(file))
+    io:println("file name:", fs:file_name(file))
+    io:println("extension:", fs:extension(file))
+    io:println("parent:", fs:parent(file))
+
+    io:println("copying file...")
+    var copied_bytes = fs:copy(file, copy_file)
+    io:println("copied bytes:", copied_bytes)
+
+    io:println("renaming copy...")
+    fs:rename(copy_file, renamed_file)
+
+    io:println("metadata:")
+    var meta = fs:metadata(renamed_file)
+    io:println("is_file:", meta.is_file)
+    io:println("is_dir:", meta.is_dir)
+    io:println("is_symlink:", meta.is_symlink)
+    io:println("readonly:", meta.readonly)
+    io:println("size:", meta.size)
+
+    io:println("list dir:")
+    var entries = fs:list_dir(base)
+
+    for (var i = 0; i < entries.len(); i += 1) {
+        io:println("-", entries[i])
+    }
+
+    io:println("changing current dir...")
+    fs:set_current_dir(base)
+    io:println("new current dir:", fs:current_dir())
+
+    io:println("reading with relative path:")
+    io:println(fs:read("hello.txt"))
+
+    io:println("returning to original dir...")
+    fs:set_current_dir(original_dir)
+    io:println("current dir again:", fs:current_dir())
+
+    io:println("removing files...")
+    fs:remove_file(file)
+    fs:remove_file(renamed_file)
+
+    io:println("removing dirs...")
+    fs:remove_dir(nested)
+    fs:remove_dir(base)
+
+    io:println("base still exists:", fs:exists(base))
+
+    io:println("===== FS MODULE TEST END =====")
+}

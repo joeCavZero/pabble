@@ -18,6 +18,8 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
     registry.insert("random".to_string(), random::setup(peng));
 
     registry.insert("convert".to_string(), convert::setup(peng));
+    
+    registry.insert("fs".to_string(), fs::setup(peng));
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 

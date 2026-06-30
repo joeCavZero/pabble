@@ -1,0 +1,38 @@
+import("io") as io
+import("threads") as threads
+
+func repeat(ch, count) {
+    var s = ""
+
+    for (var i = 0; i < count; i += 1) {
+        s = s .. ch
+    }
+
+    return s
+}
+
+func main() {
+    var width = 30
+    var ball = "🐧"
+
+    io:println("Penguin atravessando o terminal...")
+
+    for (var pos = 0; pos < width; pos += 1) {
+        io:print("\r")
+        io:print(repeat(" ", pos))
+        io:print(ball)
+        io:print(repeat(" ", width - pos))
+        threads:sleep(80)
+    }
+
+    for (var pos = width; pos >= 0; pos -= 1) {
+        io:print("\r")
+        io:print(repeat(" ", pos))
+        io:print(ball)
+        io:print(repeat(" ", width - pos))
+        threads:sleep(80)
+    }
+
+    io:println("")
+    io:println("Fim da caminhada 🐧")
+}
