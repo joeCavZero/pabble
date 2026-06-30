@@ -5,7 +5,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     module
-        .register_native_function(peng, "integer", |ctx| {
+        .register_immutable_native_function(peng, "integer", |ctx| {
             let min = match ctx.get_arg_cell(0) {
                 Some(arg) => match arg.value() {
                     PengCell::Int(v) => *v,
@@ -56,7 +56,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         .unwrap();
 
     module
-        .register_native_function(peng, "float64", |ctx| {
+        .register_immutable_native_function(peng, "float64", |ctx| {
             let min = match ctx.get_arg_cell(0) {
                 Some(arg) => match arg.value() {
                     PengCell::Float64(v) => *v,
@@ -108,7 +108,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         .unwrap();
 
     module
-        .register_native_function(peng, "boolean", |_| {
+        .register_immutable_native_function(peng, "boolean", |_| {
             let mut rng = rand::rng();
             let value: bool = rng.random();
 

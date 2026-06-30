@@ -3,7 +3,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     module
-        .register_native_function(peng, "spawn", |ctx| {
+        .register_immutable_native_function(peng, "spawn", |ctx| {
             let function_ptr = match ctx.get_arg_cell(0) {
                 Some(arg) => match arg.value() {
                     PengCell::Reference(ptr) => *ptr,
@@ -53,7 +53,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         .unwrap();
 
     module
-        .register_native_function(peng, "yield", |ctx| {
+        .register_immutable_native_function(peng, "yield", |ctx| {
             match ctx.yield_now() {
                 Ok(()) => {}
                 Err(e) => return Err(e),
@@ -62,7 +62,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         })
         .unwrap();
     module
-        .register_native_function(peng, "sleep", |ctx| {
+        .register_immutable_native_function(peng, "sleep", |ctx| {
             let millis = match ctx.get_arg_cell(0) {
                 Some(arg) => match arg.value() {
                     PengCell::Int(v) => {

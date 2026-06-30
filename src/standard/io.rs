@@ -7,20 +7,20 @@ type NativeResult = Result<PengBindedCell, PengError>;
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_native_function(peng, "print", print).unwrap();
-    module.register_native_function(peng, "println", println).unwrap();
+    module.register_immutable_native_function(peng, "print", print).unwrap();
+    module.register_immutable_native_function(peng, "println", println).unwrap();
 
-    module.register_native_function(peng, "eprint", eprint).unwrap();
-    module.register_native_function(peng, "eprintln", eprintln).unwrap();
+    module.register_immutable_native_function(peng, "eprint", eprint).unwrap();
+    module.register_immutable_native_function(peng, "eprintln", eprintln).unwrap();
 
-    module.register_native_function(peng, "flush", flush).unwrap();
+    module.register_immutable_native_function(peng, "flush", flush).unwrap();
 
-    module.register_native_function(peng, "read_line", read_line).unwrap();
-    module.register_native_function(peng, "read_all", read_all).unwrap();
-    module.register_native_function(peng, "read_byte", read_byte).unwrap();
+    module.register_immutable_native_function(peng, "read_line", read_line).unwrap();
+    module.register_immutable_native_function(peng, "read_all", read_all).unwrap();
+    module.register_immutable_native_function(peng, "read_byte", read_byte).unwrap();
 
     module
-        .register_native_function(peng, "clear_screen", clear_screen)
+        .register_immutable_native_function(peng, "clear_screen", clear_screen)
         .unwrap();
 
     module

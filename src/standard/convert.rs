@@ -4,7 +4,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     module
-        .register_native_function(peng, "integer", |ctx| {
+        .register_immutable_native_function(peng, "integer", |ctx| {
             let arg = match ctx.get_arg_cell(0) {
                 Some(arg) => arg,
                 None => {

@@ -1,0 +1,28 @@
+import("http") as http
+import("io") as io
+import("threads") as threads
+
+func main() {
+    var client = http:new_client({
+        timeout = 5000,
+        max_redirects = 10,
+        https_only = false
+    })
+
+    var req = http:new_request("GET", "https://example.com", nil)
+    req = http:set_header(req, "User-Agent", "Penguin")
+
+    var task = client.send_async(req)
+
+    while !task.is_finished() {
+        io:println("waiting http...")
+        threads:yield()
+    }
+
+    var res = task.get()
+
+    io:println(res.status)
+    io:println(res.ok)
+    io:println(res.reason)
+    io:println(res.body)
+}

@@ -27,13 +27,13 @@ pub type PebbleImportCache = Rc<RefCell<HashMap<PathBuf, PebbleImportCacheEntry>
 pub fn setup(
     peng: &mut PengEnv,
     unit: &mut PengUnit,
-    std_registry: PebbleStdRegistry,
+    std_registry: PebbleStandardRegistry,
     import_cache: PebbleImportCache,
 ) -> Result<(), PengError> {
     let prelude_for_import = Rc::new(RefCell::new(unit.clone()));
     let prelude_for_import_ref = prelude_for_import.clone();
 
-    match unit.register_native_function(peng, "import", move |ctx| {
+    match unit.register_immutable_native_function(peng, "import", move |ctx| {
         let path = match ctx.get_arg_value(0) {
             Some(value) => match value.value() {
                 PengValue::Box(PengBox::String(s)) => s.clone(),

@@ -6,9 +6,9 @@ use std::{
     rc::Rc,
 };
 
-pub type PebbleStdRegistry = HashMap<String, PengUnit>;
+pub type PebbleStandardRegistry = HashMap<String, PengUnit>;
 
-pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistry, PengError> {
+pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRegistry, PengError> {
     let mut registry = HashMap::new();
 
     registry.insert("io".to_string(), io::setup(peng));
@@ -26,7 +26,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStdRegistr
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
-    unit.register_native_operation(peng, "impl", operations::implements).unwrap();
+    unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();
 
     register_custom_accesses(peng, unit);
 

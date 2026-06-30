@@ -3,7 +3,7 @@ use crate::standard::*;
 use penguin::prelude::*;
 
 impl PebbleCLI {
-    pub fn run_run(&self, entry: Option<&String>) {
+    pub fn run_program(&self, entry: Option<&String>) {
         let root = match entry {
             Some(path) => path,
 

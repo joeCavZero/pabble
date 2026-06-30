@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 use penguin::prelude::*;
 
@@ -7,6 +9,30 @@ use super::utils;
 
 use ureq::ResponseExt;
 use ureq::http::Method;
+
+#[derive(Debug, Clone)]
+struct HttpRequestData {
+    method: String,
+    url: String,
+    headers: Vec<(String, String)>,
+    body: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct HttpResponseData {
+    status: usize,
+    ok: bool,
+    reason: String,
+    headers: Vec<(String, String)>,
+    body: String,
+    url: String,
+}
+
+#[derive(Debug, Clone)]
+enum HttpTaskState {
+    Running,
+    Finished(Result<HttpResponseData, String>),
+}
 
 #[derive(Debug, Clone)]
 struct HttpClientConfig {
@@ -34,24 +60,24 @@ impl HttpClientConfig {
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_native_function(peng, "new_client", client).unwrap();
+    module.register_immutable_native_function(peng, "new_client", client).unwrap();
     module
-        .register_native_function(peng, "new_request", new_request)
+        .register_immutable_native_function(peng, "new_request", new_request)
         .unwrap();
-    module.register_native_function(peng, "send", send).unwrap();
+    module.register_immutable_native_function(peng, "send", send).unwrap();
 
     module
-        .register_native_function(peng, "set_header", set_header)
+        .register_immutable_native_function(peng, "set_header", set_header)
         .unwrap();
     module
-        .register_native_function(peng, "get_header", get_header)
+        .register_immutable_native_function(peng, "get_header", get_header)
         .unwrap();
     module
-        .register_native_function(peng, "remove_header", remove_header)
+        .register_immutable_native_function(peng, "remove_header", remove_header)
         .unwrap();
 
     module
-        .register_native_function(peng, "status_text", status_text)
+        .register_immutable_native_function(peng, "status_text", status_text)
         .unwrap();
 
     module
@@ -122,121 +148,41 @@ fn new_request(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell
 }
 
 fn send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let first_arg = match ctx.get_arg_cell(0) {
-        Some(arg) => arg.clone(),
-        None => {
-            return Err(PengError::CannotCallValue(
-                "http:send() missing request argument".into(),
-            ));
-        }
-    };
-
-    let second_arg = match ctx.get_arg_cell(1) {
-        Some(arg) => Some(arg.clone()),
-        None => None,
-    };
-
-    let (client_config, request_fields) = match second_arg {
-        Some(request_arg) => {
-            let client_fields = match get_object_fields_from_cell(ctx, &first_arg, "send") {
-                Ok(fields) => fields,
-                Err(e) => return Err(e),
-            };
-
-            let client_config = match client_config_from_fields(ctx, &client_fields, "send") {
-                Ok(config) => config,
-                Err(e) => return Err(e),
-            };
-
-            let request_fields = match get_object_fields_from_cell(ctx, &request_arg, "send") {
-                Ok(fields) => fields,
-                Err(e) => return Err(e),
-            };
-
-            (client_config, request_fields)
-        }
-
-        None => {
-            let request_fields = match get_object_fields_from_cell(ctx, &first_arg, "send") {
-                Ok(fields) => fields,
-                Err(e) => return Err(e),
-            };
-
-            (HttpClientConfig::default(), request_fields)
-        }
-    };
-
-    let method = match get_required_string_field(ctx, &request_fields, "method", "send") {
-        Ok(method) => method,
+    let (client_config, request_data) = match get_send_data(ctx, "send") {
+        Ok(data) => data,
         Err(e) => return Err(e),
     };
 
-    let url = match get_required_string_field(ctx, &request_fields, "url", "send") {
-        Ok(url) => url,
+    let response = match execute_request_data(client_config, request_data, "send") {
+        Ok(response) => response,
+        Err(e) => return Err(PengError::CannotCallValue(e)),
+    };
+
+    response_data_to_object(ctx, response)
+}
+
+fn send_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+    let (client_config, request_data) = match get_send_data(ctx, "send_async") {
+        Ok(data) => data,
         Err(e) => return Err(e),
     };
 
-    let headers_fields = match get_headers_from_request(ctx, &request_fields, "send") {
-        Ok(fields) => fields,
-        Err(e) => return Err(e),
-    };
+    let state = Arc::new(Mutex::new(HttpTaskState::Running));
+    let thread_state = state.clone();
 
-    let headers = match fields_to_string_pairs(ctx, &headers_fields, "send") {
-        Ok(headers) => headers,
-        Err(e) => return Err(e),
-    };
+    thread::spawn(move || {
+        let result = execute_request_data(client_config, request_data, "send_async");
 
-    let body = match get_optional_body_from_request(ctx, &request_fields, "send") {
-        Ok(body) => body,
-        Err(e) => return Err(e),
-    };
+        match thread_state.lock() {
+            Ok(mut locked) => {
+                *locked = HttpTaskState::Finished(result);
+            }
 
-    let method = match Method::from_bytes(method.as_bytes()) {
-        Ok(method) => method,
-        Err(_) => {
-            return Err(PengError::CannotCallValue(format!(
-                "http:send() invalid HTTP method '{}'",
-                method
-            )));
+            Err(_) => {}
         }
-    };
+    });
 
-    let agent = build_agent(client_config);
-    let mut builder = ureq::http::Request::builder().method(method).uri(url.clone());
-
-    for (name, value) in headers {
-        builder = builder.header(name, value);
-    }
-
-    match body {
-        Some(body) => {
-            let request = match builder.body(body) {
-                Ok(request) => request,
-                Err(e) => {
-                    return Err(PengError::CannotCallValue(format!(
-                        "http:send() failed to build request: {}",
-                        e
-                    )));
-                }
-            };
-
-            execute_request(ctx, &agent, request)
-        }
-
-        None => {
-            let request = match builder.body(()) {
-                Ok(request) => request,
-                Err(e) => {
-                    return Err(PengError::CannotCallValue(format!(
-                        "http:send() failed to build request: {}",
-                        e
-                    )));
-                }
-            };
-
-            execute_request(ctx, &agent, request)
-        }
-    }
+    task_object(ctx, state)
 }
 
 fn set_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -364,74 +310,6 @@ fn status_text(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell
     }
 }
 
-fn execute_request<S>(
-    ctx: &mut PengNativeFunctionCallContext,
-    agent: &ureq::Agent,
-    request: ureq::http::Request<S>,
-) -> Result<PengBindedCell, PengError>
-where
-    S: ureq::AsSendBody,
-{
-    let mut response = match agent.run(request) {
-        Ok(response) => response,
-        Err(e) => {
-            return Err(PengError::CannotCallValue(format!(
-                "http:send() request failed: {}",
-                e
-            )));
-        }
-    };
-
-    let status = response.status().as_u16() as usize;
-    let ok = status >= 200 && status <= 299;
-    let reason = match response.status().canonical_reason() {
-        Some(reason) => reason.to_string(),
-        None => String::new(),
-    };
-
-    let url = response.get_uri().to_string();
-
-    let mut response_headers = Vec::new();
-
-    for (name, value) in response.headers().iter() {
-        let value = match value.to_str() {
-            Ok(value) => value.to_string(),
-            Err(_) => String::new(),
-        };
-
-        response_headers.push((name.to_string(), value));
-    }
-
-    let body = match response.body_mut().read_to_string() {
-        Ok(body) => body,
-        Err(e) => {
-            return Err(PengError::CannotCallValue(format!(
-                "http:send() failed to read response body: {}",
-                e
-            )));
-        }
-    };
-
-    let status_cell = PengBindedCell::Mutable(PengCell::Uint(status));
-    let ok_cell = PengBindedCell::Mutable(PengCell::Bool(ok));
-    let reason_cell = string_cell(ctx, reason);
-    let headers_cell = object_from_string_pairs(ctx, response_headers);
-    let body_cell = string_cell(ctx, body);
-    let url_cell = string_cell(ctx, url);
-
-    utils::new_object(
-        ctx,
-        vec![
-            ("status", status_cell),
-            ("ok", ok_cell),
-            ("reason", reason_cell),
-            ("headers", headers_cell),
-            ("body", body_cell),
-            ("url", url_cell),
-        ],
-    )
-}
-
 fn build_agent(config: HttpClientConfig) -> ureq::Agent {
     let max_redirects = if config.max_redirects > u32::MAX as usize {
         u32::MAX
@@ -514,6 +392,7 @@ fn new_client_object(
     };
 
     let send_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(client_send)));
+    let send_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(client_send_async)));
 
     utils::new_object(
         ctx,
@@ -542,6 +421,10 @@ fn new_client_object(
             (
                 "send",
                 PengBindedCell::Immutable(PengCell::Reference(send_ptr)),
+            ),
+            (
+                "send_async",
+                PengBindedCell::Immutable(PengCell::Reference(send_async_ptr)),
             ),
         ],
     )
@@ -881,4 +764,328 @@ fn object_from_string_pairs(
 
 fn client_send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     send(ctx)
+}
+
+fn client_send_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+    send_async(ctx)
+}
+
+fn get_send_data(
+    ctx: &mut PengNativeFunctionCallContext,
+    function_name: &str,
+) -> Result<(HttpClientConfig, HttpRequestData), PengError> {
+    let first_arg = match ctx.get_arg_cell(0) {
+        Some(arg) => arg.clone(),
+        None => {
+            return Err(PengError::CannotCallValue(format!(
+                "http:{}() missing request argument",
+                function_name
+            )));
+        }
+    };
+
+    let second_arg = match ctx.get_arg_cell(1) {
+        Some(arg) => Some(arg.clone()),
+        None => None,
+    };
+
+    let (client_config, request_fields) = match second_arg {
+        Some(request_arg) => {
+            let client_fields = match get_object_fields_from_cell(ctx, &first_arg, function_name) {
+                Ok(fields) => fields,
+                Err(e) => return Err(e),
+            };
+
+            let client_config = match client_config_from_fields(ctx, &client_fields, function_name) {
+                Ok(config) => config,
+                Err(e) => return Err(e),
+            };
+
+            let request_fields = match get_object_fields_from_cell(ctx, &request_arg, function_name) {
+                Ok(fields) => fields,
+                Err(e) => return Err(e),
+            };
+
+            (client_config, request_fields)
+        }
+
+        None => {
+            let request_fields = match get_object_fields_from_cell(ctx, &first_arg, function_name) {
+                Ok(fields) => fields,
+                Err(e) => return Err(e),
+            };
+
+            (HttpClientConfig::default(), request_fields)
+        }
+    };
+
+    let method = match get_required_string_field(ctx, &request_fields, "method", function_name) {
+        Ok(method) => method,
+        Err(e) => return Err(e),
+    };
+
+    let url = match get_required_string_field(ctx, &request_fields, "url", function_name) {
+        Ok(url) => url,
+        Err(e) => return Err(e),
+    };
+
+    let headers_fields = match get_headers_from_request(ctx, &request_fields, function_name) {
+        Ok(fields) => fields,
+        Err(e) => return Err(e),
+    };
+
+    let headers = match fields_to_string_pairs(ctx, &headers_fields, function_name) {
+        Ok(headers) => headers,
+        Err(e) => return Err(e),
+    };
+
+    let body = match get_optional_body_from_request(ctx, &request_fields, function_name) {
+        Ok(body) => body,
+        Err(e) => return Err(e),
+    };
+
+    Ok((
+        client_config,
+        HttpRequestData {
+            method,
+            url,
+            headers,
+            body,
+        },
+    ))
+}
+
+fn execute_request_data(
+    client_config: HttpClientConfig,
+    request_data: HttpRequestData,
+    function_name: &str,
+) -> Result<HttpResponseData, String> {
+    let method = match Method::from_bytes(request_data.method.as_bytes()) {
+        Ok(method) => method,
+        Err(_) => {
+            return Err(format!(
+                "http:{}() invalid HTTP method '{}'",
+                function_name, request_data.method
+            ));
+        }
+    };
+
+    let agent = build_agent(client_config);
+
+    let mut builder = ureq::http::Request::builder()
+        .method(method)
+        .uri(request_data.url.clone());
+
+    for (name, value) in request_data.headers {
+        builder = builder.header(name, value);
+    }
+
+    match request_data.body {
+        Some(body) => {
+            let request = match builder.body(body) {
+                Ok(request) => request,
+                Err(e) => {
+                    return Err(format!(
+                        "http:{}() failed to build request: {}",
+                        function_name, e
+                    ));
+                }
+            };
+
+            execute_built_request(&agent, request, function_name)
+        }
+
+        None => {
+            let request = match builder.body(()) {
+                Ok(request) => request,
+                Err(e) => {
+                    return Err(format!(
+                        "http:{}() failed to build request: {}",
+                        function_name, e
+                    ));
+                }
+            };
+
+            execute_built_request(&agent, request, function_name)
+        }
+    }
+}
+
+fn execute_built_request<S>(
+    agent: &ureq::Agent,
+    request: ureq::http::Request<S>,
+    function_name: &str,
+) -> Result<HttpResponseData, String>
+where
+    S: ureq::AsSendBody,
+{
+    let mut response = match agent.run(request) {
+        Ok(response) => response,
+        Err(e) => {
+            return Err(format!(
+                "http:{}() request failed: {}",
+                function_name, e
+            ));
+        }
+    };
+
+    let status = response.status().as_u16() as usize;
+    let ok = status >= 200 && status <= 299;
+
+    let reason = match response.status().canonical_reason() {
+        Some(reason) => reason.to_string(),
+        None => String::new(),
+    };
+
+    let url = response.get_uri().to_string();
+
+    let mut headers = Vec::new();
+
+    for (name, value) in response.headers().iter() {
+        let value = match value.to_str() {
+            Ok(value) => value.to_string(),
+            Err(_) => String::new(),
+        };
+
+        headers.push((name.to_string(), value));
+    }
+
+    let body = match response.body_mut().read_to_string() {
+        Ok(body) => body,
+        Err(e) => {
+            return Err(format!(
+                "http:{}() failed to read response body: {}",
+                function_name, e
+            ));
+        }
+    };
+
+    Ok(HttpResponseData {
+        status,
+        ok,
+        reason,
+        headers,
+        body,
+        url,
+    })
+}
+
+fn response_data_to_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    response: HttpResponseData,
+) -> Result<PengBindedCell, PengError> {
+    let reason = string_cell(ctx, response.reason);
+    let headers = object_from_string_pairs(ctx, response.headers);
+    let body = string_cell(ctx, response.body);
+    let url = string_cell(ctx, response.url);
+
+    utils::new_object(
+        ctx,
+        vec![
+            ("status", PengBindedCell::Mutable(PengCell::Uint(response.status))),
+            ("ok", PengBindedCell::Mutable(PengCell::Bool(response.ok))),
+            ("reason", reason),
+            ("headers", headers),
+            ("body", body),
+            ("url", url),
+        ],
+    )
+}
+
+fn task_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<HttpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
+    let is_finished_state = state.clone();
+    let get_state = state.clone();
+    let error_state = state.clone();
+
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
+        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
+    )));
+
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
+        move |ctx| task_get(ctx, get_state.clone()),
+    )));
+
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
+        move |ctx| task_error(ctx, error_state.clone()),
+    )));
+
+    utils::new_object(
+        ctx,
+        vec![
+            (
+                "is_finished",
+                PengBindedCell::Immutable(PengCell::Reference(is_finished_ptr)),
+            ),
+            (
+                "get",
+                PengBindedCell::Immutable(PengCell::Reference(get_ptr)),
+            ),
+            (
+                "error",
+                PengBindedCell::Immutable(PengCell::Reference(error_ptr)),
+            ),
+        ],
+    )
+}
+
+fn task_is_finished(
+    _ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<HttpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
+    match state.lock() {
+        Ok(locked) => match &*locked {
+            HttpTaskState::Running => Ok(PengBindedCell::Mutable(PengCell::Bool(false))),
+            HttpTaskState::Finished(_) => Ok(PengBindedCell::Mutable(PengCell::Bool(true))),
+        },
+
+        Err(_) => Err(PengError::CannotCallValue(
+            "http task lock failed".to_string(),
+        )),
+    }
+}
+
+fn task_get(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<HttpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
+    let result = match state.lock() {
+        Ok(locked) => match &*locked {
+            HttpTaskState::Running => return nil(),
+            HttpTaskState::Finished(result) => result.clone(),
+        },
+
+        Err(_) => {
+            return Err(PengError::CannotCallValue(
+                "http task lock failed".to_string(),
+            ));
+        }
+    };
+
+    match result {
+        Ok(response) => response_data_to_object(ctx, response),
+        Err(e) => Err(PengError::CannotCallValue(e)),
+    }
+}
+
+fn task_error(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<HttpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
+    match state.lock() {
+        Ok(locked) => match &*locked {
+            HttpTaskState::Running => nil(),
+
+            HttpTaskState::Finished(result) => match result {
+                Ok(_) => nil(),
+                Err(e) => string(ctx, e.clone()),
+            },
+        },
+
+        Err(_) => Err(PengError::CannotCallValue(
+            "http task lock failed".to_string(),
+        )),
+    }
 }

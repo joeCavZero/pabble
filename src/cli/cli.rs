@@ -35,8 +35,8 @@ impl PebbleCLI {
         match self {
             Self::Run { entry } => {
                 match entry {
-                    Some(ent) => self.run_run(Some(ent)),
-                    None => self.run_run(None),
+                    Some(ent) => self.run_program(Some(ent)),
+                    None => self.run_program(None),
                 }
             },
             Self::Init => self.run_init(),
