@@ -22,6 +22,13 @@ pub fn new_object(
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
 }
 
+pub fn object(
+    ctx: &mut PengNativeFunctionCallContext,
+    values: Vec<(&str, PengBindedCell)>,
+) -> Result<PengBindedCell, PengError> {
+    new_object(ctx, values)
+}
+
 pub fn new_type(
     ctx: &mut PengNativeFunctionCallContext,
     values: Vec<(&str, PengBindedCell)>,
@@ -81,12 +88,69 @@ pub fn cell_to_uint(cell: &PengBindedCell) -> Result<usize, PengError> {
     }
 }
 
+pub fn cell_to_int(cell: &PengBindedCell) -> Result<isize, PengError> {
+    match cell.value() {
+        PengCell::Int(value) => Ok(*value),
+
+        PengCell::Uint(value) => {
+            if *value > isize::MAX as usize {
+                return Err(PengError::CannotCallValue(
+                    "expected int argument".to_string(),
+                ));
+            }
+
+            Ok(*value as isize)
+        }
+
+        PengCell::Byte(value) => Ok(*value as isize),
+
+        _ => Err(PengError::CannotCallValue(
+            "expected int argument".to_string(),
+        )),
+    }
+}
+
 pub fn cell_to_bool(cell: &PengBindedCell) -> Result<bool, PengError> {
     match cell.value() {
         PengCell::Bool(value) => Ok(*value),
 
         _ => Err(PengError::CannotCallValue(
             "expected bool value".to_string()
+        )),
+    }
+}
+
+pub fn cell_to_number(
+    ctx: &PengNativeFunctionCallContext,
+    cell: &PengBindedCell,
+) -> Result<f64, PengError> {
+    match cell.value() {
+        PengCell::Int(v) => Ok(*v as f64),
+        PengCell::Uint(v) => Ok(*v as f64),
+        PengCell::Byte(v) => Ok(*v as f64),
+        PengCell::Float32(v) => Ok(*v as f64),
+        PengCell::Float64(v) => Ok(*v),
+
+        PengCell::Reference(ptr) => {
+            match ctx.get_value(*ptr) {
+                Some(PengValue::Cell(PengCell::Int(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Uint(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Byte(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Float32(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Float64(v))) => Ok(*v),
+
+                Some(_) => Err(PengError::CannotCallValue(
+                    "expected number argument".to_string(),
+                )),
+
+                None => Err(PengError::CannotCallValue(
+                    "heap value not found".to_string(),
+                )),
+            }
+        }
+
+        _ => Err(PengError::CannotCallValue(
+            "expected number argument".to_string(),
         )),
     }
 }
@@ -114,6 +178,30 @@ pub fn get_object_fields_from_cell(
 
 pub fn nil() -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Nil))
+}
+
+pub fn bool_cell(value: bool) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Bool(value)))
+}
+
+pub fn int_cell(value: isize) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Int(value)))
+}
+
+pub fn uint_cell(value: usize) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Uint(value)))
+}
+
+pub fn byte_cell(value: u8) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Byte(value)))
+}
+
+pub fn f32_cell(value: f32) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Float32(value)))
+}
+
+pub fn f64_cell(value: f64) -> Result<PengBindedCell, PengError> {
+    Ok(PengBindedCell::Mutable(PengCell::Float64(value)))
 }
 
 pub fn string(ctx: &mut PengNativeFunctionCallContext, value: String) -> Result<PengBindedCell, PengError> {
@@ -149,6 +237,11 @@ pub fn object_from_string_pairs(
     object_from_fields(ctx, fields)
 }
 
+pub fn vector(ctx: &mut PengNativeFunctionCallContext, values: Vec<PengBindedCell>) -> Result<PengBindedCell, PengError> {
+    let ptr = ctx.create_box(PengBox::Vector(PengVector { values }));
+
+    Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
+}
 
 pub fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
     let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
@@ -202,6 +295,65 @@ pub fn timeout_to_duration(value: Option<usize>) -> Option<Duration> {
     value.map(|value| Duration::from_millis(usize_to_u64_saturating(value)))
 }
 
+pub fn get_arg_cell(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<PengBindedCell, PengError> {
+    match ctx.get_arg_cell(index) {
+        Some(arg) => Ok(arg.clone()),
+        None => Err(PengError::CannotCallValue(
+            "missing argument".to_string(),
+        )),
+    }
+}
+
+pub fn get_string_arg(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<String, PengError> {
+    let arg = match get_arg_cell(ctx, index) {
+        Ok(arg) => arg,
+        Err(e) => return Err(e),
+    };
+
+    cell_to_string(ctx, &arg)
+}
+
+pub fn get_uint_arg(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<usize, PengError> {
+    let arg = match get_arg_cell(ctx, index) {
+        Ok(arg) => arg,
+        Err(e) => return Err(e),
+    };
+
+    cell_to_uint(&arg)
+}
+
+pub fn get_int_arg(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<isize, PengError> {
+    let arg = match get_arg_cell(ctx, index) {
+        Ok(arg) => arg,
+        Err(e) => return Err(e),
+    };
+
+    cell_to_int(&arg)
+}
+
+pub fn get_bool_arg(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<bool, PengError> {
+    let arg = match get_arg_cell(ctx, index) {
+        Ok(arg) => arg,
+        Err(e) => return Err(e),
+    };
+
+    cell_to_bool(&arg)
+}
 
 pub fn unary_f64(
     ctx: &mut PengNativeFunctionCallContext,
@@ -236,43 +388,10 @@ pub fn get_number_arg(
     ctx: &PengNativeFunctionCallContext,
     index: usize,
 ) -> Result<f64, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "missing number argument at index {}",
-                index
-            )));
-        }
+    let arg = match get_arg_cell(ctx, index) {
+        Ok(arg) => arg,
+        Err(e) => return Err(e),
     };
 
-    match arg.value() {
-        PengCell::Int(v) => Ok(*v as f64),
-        PengCell::Uint(v) => Ok(*v as f64),
-        PengCell::Byte(v) => Ok(*v as f64),
-        PengCell::Float32(v) => Ok(*v as f64),
-        PengCell::Float64(v) => Ok(*v),
-
-        PengCell::Reference(ptr) => {
-            match ctx.get_value(*ptr) {
-                Some(PengValue::Cell(PengCell::Int(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Uint(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Byte(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Float32(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Float64(v))) => Ok(*v),
-
-                Some(_) => Err(PengError::CannotCallValue(format!(
-                    "expected number at index {}",
-                    index
-                ))),
-
-                None => Err(PengError::HeapValueNotFound(*ptr)),
-            }
-        }
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "expected number at index {}",
-            index
-        ))),
-    }
+    cell_to_number(ctx, &arg)
 }

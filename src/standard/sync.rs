@@ -396,7 +396,7 @@ fn atomic_bool_set(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinded
         Err(e) => return Err(e),
     };
 
-    let value = match get_bool_arg(ctx, 1, "AtomicBool.set") {
+    let value = match utils::get_bool_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -420,7 +420,7 @@ fn atomic_bool_swap(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinde
         Err(e) => return Err(e),
     };
 
-    let new_value = match get_bool_arg(ctx, 1, "AtomicBool.swap") {
+    let new_value = match utils::get_bool_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -463,7 +463,7 @@ fn atomic_int_set(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedC
         Err(e) => return Err(e),
     };
 
-    let value = match get_int_arg(ctx, 1, "AtomicInt.set") {
+    let value = match utils::get_int_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -487,7 +487,7 @@ fn atomic_int_add(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedC
         Err(e) => return Err(e),
     };
 
-    let add_value = match get_int_arg(ctx, 1, "AtomicInt.add") {
+    let add_value = match utils::get_int_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -525,7 +525,7 @@ fn atomic_int_sub(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedC
         Err(e) => return Err(e),
     };
 
-    let sub_value = match get_int_arg(ctx, 1, "AtomicInt.sub") {
+    let sub_value = match utils::get_int_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -563,7 +563,7 @@ fn atomic_int_swap(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinded
         Err(e) => return Err(e),
     };
 
-    let new_value = match get_int_arg(ctx, 1, "AtomicInt.swap") {
+    let new_value = match utils::get_int_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -839,67 +839,6 @@ fn get_object_ptr_arg(
         ))),
 
         None => Err(PengError::HeapValueNotFound(ptr)),
-    }
-}
-
-fn get_bool_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<bool, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "sync:{}() missing bool argument",
-                function_name
-            )));
-        }
-    };
-
-    match arg.value() {
-        PengCell::Bool(value) => Ok(*value),
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "sync:{}() expected bool",
-            function_name
-        ))),
-    }
-}
-
-fn get_int_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<isize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "sync:{}() missing int argument",
-                function_name
-            )));
-        }
-    };
-
-    match arg.value() {
-        PengCell::Int(value) => Ok(*value),
-
-        PengCell::Uint(value) => {
-            if *value > isize::MAX as usize {
-                return Err(PengError::CannotCallValue(format!(
-                    "sync:{}() uint argument is too large for int",
-                    function_name
-                )));
-            }
-
-            Ok(*value as isize)
-        }
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "sync:{}() expected int",
-            function_name
-        ))),
     }
 }
 

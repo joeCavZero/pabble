@@ -211,12 +211,12 @@ fn set_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
         }
     };
 
-    let name = match get_string_arg(ctx, 1, "set_header") {
+    let name = match utils::get_string_arg(ctx, 1) {
         Ok(name) => name,
         Err(e) => return Err(e),
     };
 
-    let value = match get_string_arg(ctx, 2, "set_header") {
+    let value = match utils::get_string_arg(ctx, 2) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -247,7 +247,7 @@ fn get_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
         }
     };
 
-    let name = match get_string_arg(ctx, 1, "get_header") {
+    let name = match utils::get_string_arg(ctx, 1) {
         Ok(name) => name,
         Err(e) => return Err(e),
     };
@@ -284,7 +284,7 @@ fn remove_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCe
         }
     };
 
-    let name = match get_string_arg(ctx, 1, "remove_header") {
+    let name = match utils::get_string_arg(ctx, 1) {
         Ok(name) => name,
         Err(e) => return Err(e),
     };
@@ -306,7 +306,7 @@ fn remove_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCe
 }
 
 fn status_text(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let code = match get_uint_arg(ctx, 0, "status_text") {
+    let code = match utils::get_uint_arg(ctx, 0) {
         Ok(code) => code,
         Err(e) => return Err(e),
     };
@@ -548,42 +548,6 @@ fn get_optional_bool_field(
 
         None => Ok(None),
     }
-}
-
-fn get_string_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<String, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "http:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    utils::cell_to_string(ctx, arg)
-}
-
-fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<usize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "http:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    utils::cell_to_uint(arg)
 }
 
 fn client_send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {

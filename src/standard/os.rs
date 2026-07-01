@@ -204,7 +204,7 @@ fn cpu_count(_ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
 }
 
 fn get_env(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let name = match get_string_arg(ctx, 0, "get_env") {
+    let name = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -216,12 +216,12 @@ fn get_env(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
 }
 
 fn set_env(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let name = match get_string_arg(ctx, 0, "set_env") {
+    let name = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
 
-    let value = match get_string_arg(ctx, 1, "set_env") {
+    let value = match utils::get_string_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -234,7 +234,7 @@ fn set_env(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
 }
 
 fn remove_env(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let name = match get_string_arg(ctx, 0, "remove_env") {
+    let name = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -726,22 +726,4 @@ fn strict_cell_to_string(
             function_name
         ))),
     }
-}
-
-fn get_string_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<String, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "os:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    strict_cell_to_string(ctx, arg, function_name)
 }

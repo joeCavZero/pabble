@@ -225,7 +225,7 @@ fn join(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengE
 }
 
 fn split(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let address = match get_string_arg(ctx, 0, "split") {
+    let address = match utils::get_string_arg(ctx, 0) {
         Ok(address) => address,
         Err(e) => return Err(e),
     };
@@ -319,7 +319,7 @@ fn ip_info(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
 }
 
 fn is_ip(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let value = match get_string_arg(ctx, 0, "is_ip") {
+    let value = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -330,7 +330,7 @@ fn is_ip(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Peng
 }
 
 fn is_ipv4(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let value = match get_string_arg(ctx, 0, "is_ipv4") {
+    let value = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -343,7 +343,7 @@ fn is_ipv4(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
 }
 
 fn is_ipv6(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let value = match get_string_arg(ctx, 0, "is_ipv6") {
+    let value = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -372,7 +372,7 @@ fn is_multicast(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCel
 }
 
 fn valid_port(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let port = match get_uint_arg(ctx, 0, "valid_port") {
+    let port = match utils::get_uint_arg(ctx, 0) {
         Ok(port) => port,
         Err(e) => return Err(e),
     };
@@ -706,7 +706,7 @@ fn get_address_data_from_args(
     match utils::cell_to_string(ctx, &first_arg) {
         Ok(value) => match ctx.get_arg_cell(1) {
             Some(_) => {
-                let port = match get_uint_arg(ctx, 1, function_name) {
+                let port = match utils::get_uint_arg(ctx, 1) {
                     Ok(port) => port,
                     Err(e) => return Err(e),
                 };
@@ -931,7 +931,7 @@ fn get_ip_arg(
     index: usize,
     function_name: &str,
 ) -> Result<IpAddr, PengError> {
-    let value = match get_string_arg(ctx, index, function_name) {
+    let value = match utils::get_string_arg(ctx, index) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -940,54 +940,6 @@ fn get_ip_arg(
         Ok(ip) => Ok(ip),
         Err(_) => Err(PengError::CannotCallValue(format!(
             "net:{}() expected IP address at index {}",
-            function_name, index
-        ))),
-    }
-}
-
-fn get_string_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<String, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "net:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_string(ctx, arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "net:{}() expected string at index {}",
-            function_name, index
-        ))),
-    }
-}
-
-fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<usize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "net:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_uint(arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "net:{}() expected uint at index {}",
             function_name, index
         ))),
     }

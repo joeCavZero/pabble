@@ -619,7 +619,7 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTask
 }
 
 fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
-    let size = match get_uint_arg(ctx, 1, "Connection.read") {
+    let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
     };
@@ -819,7 +819,7 @@ fn connection_read_byte(
 }
 
 fn connection_write(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
-    let data = match get_string_arg(ctx, 1, "Connection.write") {
+    let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
@@ -831,7 +831,7 @@ fn connection_write_line(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let mut data = match get_string_arg(ctx, 1, "Connection.write_line") {
+    let mut data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
@@ -1018,7 +1018,7 @@ fn connection_set_non_blocking(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let value = match get_bool_arg(ctx, 1, "Connection.set_non_blocking") {
+    let value = match utils::get_bool_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -1300,7 +1300,7 @@ fn get_client_data_from_args(
 
     match utils::cell_to_string(ctx, &first_arg) {
         Ok(host) => {
-            let port = match get_uint_arg(ctx, 1, function_name) {
+            let port = match utils::get_uint_arg(ctx, 1) {
                 Ok(port) => port,
                 Err(e) => return Err(e),
             };
@@ -1398,7 +1398,7 @@ fn get_server_data_from_args(
 
     match utils::cell_to_string(ctx, &first_arg) {
         Ok(host) => {
-            let port = match get_uint_arg(ctx, 1, function_name) {
+            let port = match utils::get_uint_arg(ctx, 1) {
                 Ok(port) => port,
                 Err(e) => return Err(e),
             };
@@ -1552,54 +1552,6 @@ fn get_optional_bool_field(
     }
 }
 
-fn get_string_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<String, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "tcp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_string(ctx, arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "tcp:{}() expected string at index {}",
-            function_name, index
-        ))),
-    }
-}
-
-fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<usize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "tcp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_uint(arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "tcp:{}() expected uint at index {}",
-            function_name, index
-        ))),
-    }
-}
-
 fn get_optional_uint_arg(
     ctx: &PengNativeFunctionCallContext,
     index: usize,
@@ -1619,30 +1571,6 @@ fn get_optional_uint_arg(
                 function_name, index
             ))),
         },
-    }
-}
-
-fn get_bool_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<bool, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "tcp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_bool(arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "tcp:{}() expected bool at index {}",
-            function_name, index
-        ))),
     }
 }
 

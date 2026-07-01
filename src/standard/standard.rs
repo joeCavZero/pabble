@@ -37,6 +37,8 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
 
     registry.insert("net".to_string(), net::setup(peng));
 
+    registry.insert("ffi".to_string(), ffi::setup(peng));
+
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
     unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();

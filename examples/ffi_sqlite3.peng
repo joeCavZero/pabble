@@ -1,0 +1,118 @@
+import("ffi") as ffi
+import("io") as io
+
+func main() {
+    io:println("===== SQLITE3 CREATE DB VIA FFI TEST =====")
+
+    var sqlite = ffi:open_platform({
+        linux = "libsqlite3.so",
+        macos = "libsqlite3.dylib",
+        windows = "sqlite3.dll"
+    })
+
+    var sqlite3_open = ffi:bind(sqlite, {
+        name = "sqlite3_open",
+        params = [ffi:c_string, ffi:c_ptr],
+        result = ffi:c_int
+    })
+
+    var sqlite3_exec = ffi:bind(sqlite, {
+        name = "sqlite3_exec",
+        params = [ffi:c_ptr, ffi:c_string, ffi:c_ptr, ffi:c_ptr, ffi:c_ptr],
+        result = ffi:c_int
+    })
+
+    var sqlite3_close = ffi:bind(sqlite, {
+        name = "sqlite3_close",
+        params = [ffi:c_ptr],
+        result = ffi:c_int
+    })
+
+    var db_out = ffi:buffer(ffi:ptr_size())
+
+    var rc = sqlite3_open("penguin_ffi_test.db", db_out.ptr())
+
+    if rc != 0 {
+        io:println("sqlite3_open failed, code:", rc)
+        db_out.free()
+        sqlite.close()
+        return
+    }
+
+    var db = db_out.read_ptr(0)
+
+    io:println("database opened")
+
+    rc = sqlite3_exec(
+        db,
+        "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER);",
+        ffi:null(),
+        ffi:null(),
+        ffi:null()
+    )
+
+    if rc != 0 {
+        io:println("create table failed, code:", rc)
+        sqlite3_close(db)
+        db_out.free()
+        sqlite.close()
+        return
+    }
+
+    rc = sqlite3_exec(
+        db,
+        "INSERT INTO users (name, age) VALUES ('Joe', 20);",
+        ffi:null(),
+        ffi:null(),
+        ffi:null()
+    )
+
+    if rc != 0 {
+        io:println("insert Joe failed, code:", rc)
+        sqlite3_close(db)
+        db_out.free()
+        sqlite.close()
+        return
+    }
+
+    rc = sqlite3_exec(
+        db,
+        "INSERT INTO users (name, age) VALUES ('Penguin', 1);",
+        ffi:null(),
+        ffi:null(),
+        ffi:null()
+    )
+
+    if rc != 0 {
+        io:println("insert Penguin failed, code:", rc)
+        sqlite3_close(db)
+        db_out.free()
+        sqlite.close()
+        return
+    }
+
+    rc = sqlite3_exec(
+        db,
+        "INSERT INTO users (name, age) VALUES ('SQLite via FFI', 3);",
+        ffi:null(),
+        ffi:null(),
+        ffi:null()
+    )
+
+    if rc != 0 {
+        io:println("insert SQLite failed, code:", rc)
+        sqlite3_close(db)
+        db_out.free()
+        sqlite.close()
+        return
+    }
+
+    sqlite3_close(db)
+    db_out.free()
+    sqlite.close()
+
+    io:println("database created: penguin_ffi_test.db")
+    io:println("table created: users")
+    io:println("rows inserted: 3")
+    io:println("===== DONE =====")
+}

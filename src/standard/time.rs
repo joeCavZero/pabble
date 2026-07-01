@@ -253,7 +253,7 @@ fn instant(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
 }
 
 fn duration(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let millis = match get_uint_arg(ctx, 0, "duration") {
+    let millis = match utils::get_uint_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -635,24 +635,6 @@ fn monotonic_nanos_value() -> usize {
     let elapsed = start.elapsed();
 
     u128_to_usize_saturating(elapsed.as_nanos())
-}
-
-fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<usize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "time:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    utils::cell_to_uint(arg)
 }
 
 fn get_duration_millis_arg(

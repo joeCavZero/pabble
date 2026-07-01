@@ -410,12 +410,12 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTask
 }
 
 fn socket_connect(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
-    let host = match get_string_arg(ctx, 1, "Socket.connect") {
+    let host = match utils::get_string_arg(ctx, 1) {
         Ok(host) => host,
         Err(e) => return Err(e),
     };
 
-    let port = match get_uint_arg(ctx, 2, "Socket.connect") {
+    let port = match utils::get_uint_arg(ctx, 2) {
         Ok(port) => port,
         Err(e) => return Err(e),
     };
@@ -430,12 +430,12 @@ fn socket_connect_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let host = match get_string_arg(ctx, 1, "Socket.connect_async") {
+    let host = match utils::get_string_arg(ctx, 1) {
         Ok(host) => host,
         Err(e) => return Err(e),
     };
 
-    let port = match get_uint_arg(ctx, 2, "Socket.connect_async") {
+    let port = match utils::get_uint_arg(ctx, 2) {
         Ok(port) => port,
         Err(e) => return Err(e),
     };
@@ -462,17 +462,17 @@ fn socket_connect_async(
 }
 
 fn socket_send_to(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
-    let data = match get_string_arg(ctx, 1, "Socket.send_to") {
+    let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
 
-    let host = match get_string_arg(ctx, 2, "Socket.send_to") {
+    let host = match utils::get_string_arg(ctx, 2) {
         Ok(host) => host,
         Err(e) => return Err(e),
     };
 
-    let port = match get_uint_arg(ctx, 3, "Socket.send_to") {
+    let port = match utils::get_uint_arg(ctx, 3) {
         Ok(port) => port,
         Err(e) => return Err(e),
     };
@@ -487,17 +487,17 @@ fn socket_send_to_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let data = match get_string_arg(ctx, 1, "Socket.send_to_async") {
+    let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
 
-    let host = match get_string_arg(ctx, 2, "Socket.send_to_async") {
+    let host = match utils::get_string_arg(ctx, 2) {
         Ok(host) => host,
         Err(e) => return Err(e),
     };
 
-    let port = match get_uint_arg(ctx, 3, "Socket.send_to_async") {
+    let port = match utils::get_uint_arg(ctx, 3) {
         Ok(port) => port,
         Err(e) => return Err(e),
     };
@@ -527,7 +527,7 @@ fn socket_recv_from(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let size = match get_uint_arg(ctx, 1, "Socket.recv_from") {
+    let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
     };
@@ -549,7 +549,7 @@ fn socket_recv_from_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let size = match get_uint_arg(ctx, 1, "Socket.recv_from_async") {
+    let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
     };
@@ -583,7 +583,7 @@ fn socket_recv_from_async(
 }
 
 fn socket_send(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
-    let data = match get_string_arg(ctx, 1, "Socket.send") {
+    let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
@@ -598,7 +598,7 @@ fn socket_send_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let data = match get_string_arg(ctx, 1, "Socket.send_async") {
+    let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
     };
@@ -625,7 +625,7 @@ fn socket_send_async(
 }
 
 fn socket_recv(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
-    let size = match get_uint_arg(ctx, 1, "Socket.recv") {
+    let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
     };
@@ -647,7 +647,7 @@ fn socket_recv_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let size = match get_uint_arg(ctx, 1, "Socket.recv_async") {
+    let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
     };
@@ -741,7 +741,7 @@ fn socket_set_broadcast(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let value = match get_bool_arg(ctx, 1, "Socket.set_broadcast") {
+    let value = match utils::get_bool_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -813,7 +813,7 @@ fn socket_set_non_blocking(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
 ) -> Result<PengBindedCell, PengError> {
-    let value = match get_bool_arg(ctx, 1, "Socket.set_non_blocking") {
+    let value = match utils::get_bool_arg(ctx, 1) {
         Ok(value) => value,
         Err(e) => return Err(e),
     };
@@ -1094,7 +1094,7 @@ fn get_socket_data_from_args(
 
     match utils::cell_to_string(ctx, &first_arg) {
         Ok(host) => {
-            let port = match get_uint_arg(ctx, 1, function_name) {
+            let port = match utils::get_uint_arg(ctx, 1) {
                 Ok(port) => port,
                 Err(e) => return Err(e),
             };
@@ -1242,54 +1242,6 @@ fn get_optional_bool_field(
     }
 }
 
-fn get_string_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<String, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "udp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_string(ctx, arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "udp:{}() expected string at index {}",
-            function_name, index
-        ))),
-    }
-}
-
-fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<usize, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "udp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_uint(arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "udp:{}() expected uint at index {}",
-            function_name, index
-        ))),
-    }
-}
-
 fn get_optional_uint_arg(
     ctx: &PengNativeFunctionCallContext,
     index: usize,
@@ -1309,30 +1261,6 @@ fn get_optional_uint_arg(
                 function_name, index
             ))),
         },
-    }
-}
-
-fn get_bool_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-    function_name: &str,
-) -> Result<bool, PengError> {
-    let arg = match ctx.get_arg_cell(index) {
-        Some(arg) => arg,
-        None => {
-            return Err(PengError::CannotCallValue(format!(
-                "udp:{}() missing argument at index {}",
-                function_name, index
-            )));
-        }
-    };
-
-    match utils::cell_to_bool(arg) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(PengError::CannotCallValue(format!(
-            "udp:{}() expected bool at index {}",
-            function_name, index
-        ))),
     }
 }
 
