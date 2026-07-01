@@ -61,36 +61,18 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let client_type = client_type_value(peng);
-    match module.register_immutable_global(peng, "Client", client_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Client", client_type).unwrap();
 
     let server_type = server_type_value(peng);
-    match module.register_immutable_global(peng, "Server", server_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Server", server_type).unwrap();
 
-    match module.register_immutable_native_function(peng, "connect", connect) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "connect", connect).unwrap();
 
-    match module.register_immutable_native_function(peng, "connect_async", connect_async) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "connect_async", connect_async).unwrap();
 
-    match module.register_immutable_native_function(peng, "listen", listen) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "listen", listen).unwrap();
 
-    match module.register_immutable_native_function(peng, "listen_async", listen_async) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "listen_async", listen_async).unwrap();
 
     module
 }

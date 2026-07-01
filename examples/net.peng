@@ -1,0 +1,15 @@
+import("io") as io
+import("net") as net
+
+func main() {
+    io:println("local ip:")
+    io:println(net:local_ip())
+
+    var addr = net:local_addr()
+
+    io:println("local addr:")
+    io:println(addr.addr)
+    io:println(addr.ip)
+    io:println(addr.port)
+    io:println(addr.family)
+}

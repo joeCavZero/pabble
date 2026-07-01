@@ -51,20 +51,11 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let socket_type = socket_type_value(peng);
-    match module.register_immutable_global(peng, "Socket", socket_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Socket", socket_type).unwrap();
 
-    match module.register_immutable_native_function(peng, "bind", bind) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "bind", bind).unwrap();
 
-    match module.register_immutable_native_function(peng, "bind_async", bind_async) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_native_function(peng, "bind_async", bind_async).unwrap();
 
     module
 }

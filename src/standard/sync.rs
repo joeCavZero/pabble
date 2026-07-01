@@ -8,34 +8,19 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let mutex_type = mutex_type_value(peng);
-    match module.register_immutable_global(peng, "Mutex", mutex_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Mutex", mutex_type).unwrap();
 
     let atomic_bool_type = atomic_bool_type_value(peng);
-    match module.register_immutable_global(peng, "AtomicBool", atomic_bool_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "AtomicBool", atomic_bool_type).unwrap();
 
     let atomic_int_type = atomic_int_type_value(peng);
-    match module.register_immutable_global(peng, "AtomicInt", atomic_int_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "AtomicInt", atomic_int_type).unwrap();
 
     let channel_type = channel_type_value(peng);
-    match module.register_immutable_global(peng, "Channel", channel_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Channel", channel_type).unwrap();
 
     let once_type = once_type_value(peng);
-    match module.register_immutable_global(peng, "Once", once_type) {
-        Ok(_) => {}
-        Err(_) => {}
-    }
+    module.register_immutable_global(peng, "Once", once_type).unwrap();
 
     module
 }
