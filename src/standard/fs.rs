@@ -7,8 +7,6 @@ use std::path::{Path, PathBuf};
 
 use penguin::prelude::*;
 
-type NativeResult = Result<PengBindedCell, PengError>;
-
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
@@ -60,7 +58,7 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     module
 }
 
-fn read(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn read(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "read") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -79,7 +77,7 @@ fn read(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     string(ctx, content)
 }
 
-fn write(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn write(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "write") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -99,7 +97,7 @@ fn write(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn append(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn append(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "append") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -129,7 +127,7 @@ fn append(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn exists(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn exists(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "exists") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -138,7 +136,7 @@ fn exists(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     bool_cell(Path::new(&path).exists())
 }
 
-fn is_file(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn is_file(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "is_file") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -147,7 +145,7 @@ fn is_file(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     bool_cell(Path::new(&path).is_file())
 }
 
-fn is_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn is_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "is_dir") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -156,7 +154,7 @@ fn is_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     bool_cell(Path::new(&path).is_dir())
 }
 
-fn create_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn create_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "create_dir") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -171,7 +169,7 @@ fn create_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn create_dir_all(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn create_dir_all(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "create_dir_all") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -186,7 +184,7 @@ fn create_dir_all(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn remove_file(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn remove_file(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "remove_file") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -201,7 +199,7 @@ fn remove_file(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn remove_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn remove_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "remove_dir") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -216,7 +214,7 @@ fn remove_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn remove_dir_all(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn remove_dir_all(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "remove_dir_all") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -231,7 +229,7 @@ fn remove_dir_all(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn list_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn list_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "list_dir") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -267,7 +265,7 @@ fn list_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     vector(ctx, values)
 }
 
-fn copy(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn copy(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let from = match get_string_arg(ctx, 0, "copy") {
         Ok(from) => from,
         Err(e) => return Err(e),
@@ -291,7 +289,7 @@ fn copy(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     uint_cell(copied as usize)
 }
 
-fn rename(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn rename(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let from = match get_string_arg(ctx, 0, "rename") {
         Ok(from) => from,
         Err(e) => return Err(e),
@@ -311,7 +309,7 @@ fn rename(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn metadata(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn metadata(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "metadata") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -354,7 +352,7 @@ fn metadata(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     )
 }
 
-fn file_size(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn file_size(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "file_size") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -373,7 +371,7 @@ fn file_size(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     uint_cell(metadata.len() as usize)
 }
 
-fn current_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn current_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match env::current_dir() {
         Ok(path) => path,
         Err(_) => return Err(PengError::CannotCallValue("fs:current_dir() failed".into())),
@@ -382,7 +380,7 @@ fn current_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     string(ctx, path_to_string(path))
 }
 
-fn set_current_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn set_current_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "set_current_dir") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -397,7 +395,7 @@ fn set_current_dir(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn absolute(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn absolute(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "absolute") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -417,7 +415,7 @@ fn absolute(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     string(ctx, path_to_string(current_dir.join(path_buf)))
 }
 
-fn canonicalize(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn canonicalize(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "canonicalize") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -436,7 +434,7 @@ fn canonicalize(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     string(ctx, path_to_string(canonical))
 }
 
-fn join(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn join(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let left = match get_string_arg(ctx, 0, "join") {
         Ok(left) => left,
         Err(e) => return Err(e),
@@ -452,7 +450,7 @@ fn join(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     string(ctx, path_to_string(joined))
 }
 
-fn file_name(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn file_name(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "file_name") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -464,7 +462,7 @@ fn file_name(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn extension(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn extension(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "extension") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -476,7 +474,7 @@ fn extension(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     }
 }
 
-fn parent(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn parent(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let path = match get_string_arg(ctx, 0, "parent") {
         Ok(path) => path,
         Err(e) => return Err(e),
@@ -525,19 +523,19 @@ fn get_string_arg(
     }
 }
 
-fn nil() -> NativeResult {
+fn nil() -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Nil))
 }
 
-fn bool_cell(value: bool) -> NativeResult {
+fn bool_cell(value: bool) -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Bool(value)))
 }
 
-fn uint_cell(value: usize) -> NativeResult {
+fn uint_cell(value: usize) -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Uint(value)))
 }
 
-fn string(ctx: &mut PengNativeFunctionCallContext, value: String) -> NativeResult {
+fn string(ctx: &mut PengNativeFunctionCallContext, value: String) -> Result<PengBindedCell, PengError> {
     Ok(string_cell(ctx, value))
 }
 
@@ -547,7 +545,7 @@ fn string_cell(ctx: &mut PengNativeFunctionCallContext, value: String) -> PengBi
     PengBindedCell::Mutable(PengCell::Reference(ptr))
 }
 
-fn vector(ctx: &mut PengNativeFunctionCallContext, values: Vec<PengBindedCell>) -> NativeResult {
+fn vector(ctx: &mut PengNativeFunctionCallContext, values: Vec<PengBindedCell>) -> Result<PengBindedCell, PengError> {
     let ptr = ctx.create_box(PengBox::Vector(PengVector { values }));
 
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
@@ -556,7 +554,7 @@ fn vector(ctx: &mut PengNativeFunctionCallContext, values: Vec<PengBindedCell>) 
 fn object(
     ctx: &mut PengNativeFunctionCallContext,
     values: Vec<(&str, PengBindedCell)>,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut fields = HashMap::new();
 
     for (name, value) in values {

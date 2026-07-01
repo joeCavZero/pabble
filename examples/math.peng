@@ -1,0 +1,12 @@
+import("io") as io
+import("math") as math
+
+func main() {
+    io:println(math:PI)
+    io:println(math:sin(math:PI / 2.0))
+    io:println(math:cos(0))
+    io:println(math:to_degrees(math:PI))
+    io:println(math:sqrt(81))
+    io:println(math:pow(2, 8))
+    io:println(math:clamp(120, 0, 100))
+}

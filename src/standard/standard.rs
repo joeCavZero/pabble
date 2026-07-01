@@ -33,6 +33,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
 
     registry.insert("udp".to_string(), udp::setup(peng));
 
+    registry.insert("math".to_string(), math::setup(peng));
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 

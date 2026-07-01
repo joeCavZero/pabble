@@ -201,3 +201,78 @@ pub fn get_object_field(
 pub fn timeout_to_duration(value: Option<usize>) -> Option<Duration> {
     value.map(|value| Duration::from_millis(usize_to_u64_saturating(value)))
 }
+
+
+pub fn unary_f64(
+    ctx: &mut PengNativeFunctionCallContext,
+    op: fn(f64) -> f64,
+) -> Result<PengBindedCell, PengError> {
+    let value = match get_number_arg(ctx, 0) {
+        Ok(value) => value,
+        Err(e) => return Err(e),
+    };
+
+    Ok(PengBindedCell::Mutable(PengCell::Float64(op(value))))
+}
+
+pub fn binary_f64(
+    ctx: &mut PengNativeFunctionCallContext,
+    op: fn(f64, f64) -> f64,
+) -> Result<PengBindedCell, PengError> {
+    let left = match get_number_arg(ctx, 0) {
+        Ok(value) => value,
+        Err(e) => return Err(e),
+    };
+
+    let right = match get_number_arg(ctx, 1) {
+        Ok(value) => value,
+        Err(e) => return Err(e),
+    };
+
+    Ok(PengBindedCell::Mutable(PengCell::Float64(op(left, right))))
+}
+
+pub fn get_number_arg(
+    ctx: &PengNativeFunctionCallContext,
+    index: usize,
+) -> Result<f64, PengError> {
+    let arg = match ctx.get_arg_cell(index) {
+        Some(arg) => arg,
+        None => {
+            return Err(PengError::CannotCallValue(format!(
+                "missing number argument at index {}",
+                index
+            )));
+        }
+    };
+
+    match arg.value() {
+        PengCell::Int(v) => Ok(*v as f64),
+        PengCell::Uint(v) => Ok(*v as f64),
+        PengCell::Byte(v) => Ok(*v as f64),
+        PengCell::Float32(v) => Ok(*v as f64),
+        PengCell::Float64(v) => Ok(*v),
+
+        PengCell::Reference(ptr) => {
+            match ctx.get_value(*ptr) {
+                Some(PengValue::Cell(PengCell::Int(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Uint(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Byte(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Float32(v))) => Ok(*v as f64),
+                Some(PengValue::Cell(PengCell::Float64(v))) => Ok(*v),
+
+                Some(_) => Err(PengError::CannotCallValue(format!(
+                    "expected number at index {}",
+                    index
+                ))),
+
+                None => Err(PengError::HeapValueNotFound(*ptr)),
+            }
+        }
+
+        _ => Err(PengError::CannotCallValue(format!(
+            "expected number at index {}",
+            index
+        ))),
+    }
+}

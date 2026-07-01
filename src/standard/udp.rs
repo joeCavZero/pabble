@@ -7,8 +7,6 @@ use penguin::prelude::*;
 
 use super::utils;
 
-type NativeResult = Result<PengBindedCell, PengError>;
-
 #[derive(Debug, Clone)]
 struct UdpSocketData {
     host: String,
@@ -130,7 +128,7 @@ fn socket_type_value(peng: &mut PengEnv) -> PengValue {
     PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
-fn bind(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn bind(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let data = match get_socket_data_from_args(ctx, "bind") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -144,7 +142,7 @@ fn bind(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     socket_handle_object(ctx, handle)
 }
 
-fn bind_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn bind_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let data = match get_socket_data_from_args(ctx, "bind_async") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -171,11 +169,11 @@ fn bind_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     task_object(ctx, state)
 }
 
-fn socket_bind(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn socket_bind(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     bind(ctx)
 }
 
-fn socket_bind_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn socket_bind_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     bind_async(ctx)
 }
 
@@ -216,7 +214,7 @@ fn execute_bind_data(data: UdpSocketData, function_name: &str) -> Result<UdpSock
 fn socket_handle_object(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let connect_handle = handle.clone();
     let connect_async_handle = handle.clone();
     let send_to_handle = handle.clone();
@@ -387,7 +385,7 @@ fn socket_handle_object(
     )
 }
 
-fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> NativeResult {
+fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
     let is_finished_state = state.clone();
     let get_state = state.clone();
     let error_state = state.clone();
@@ -420,7 +418,7 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTask
     )
 }
 
-fn socket_connect(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_connect(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let host = match get_string_arg(ctx, 1, "Socket.connect") {
         Ok(host) => host,
         Err(e) => return Err(e),
@@ -440,7 +438,7 @@ fn socket_connect(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHand
 fn socket_connect_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let host = match get_string_arg(ctx, 1, "Socket.connect_async") {
         Ok(host) => host,
         Err(e) => return Err(e),
@@ -472,7 +470,7 @@ fn socket_connect_async(
     task_object(ctx, state)
 }
 
-fn socket_send_to(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_send_to(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let data = match get_string_arg(ctx, 1, "Socket.send_to") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -497,7 +495,7 @@ fn socket_send_to(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHand
 fn socket_send_to_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let data = match get_string_arg(ctx, 1, "Socket.send_to_async") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -537,7 +535,7 @@ fn socket_send_to_async(
 fn socket_recv_from(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let size = match get_uint_arg(ctx, 1, "Socket.recv_from") {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -559,7 +557,7 @@ fn socket_recv_from(
 fn socket_recv_from_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let size = match get_uint_arg(ctx, 1, "Socket.recv_from_async") {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -593,7 +591,7 @@ fn socket_recv_from_async(
     task_object(ctx, state)
 }
 
-fn socket_send(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_send(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let data = match get_string_arg(ctx, 1, "Socket.send") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -608,7 +606,7 @@ fn socket_send(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle)
 fn socket_send_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let data = match get_string_arg(ctx, 1, "Socket.send_async") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -635,7 +633,7 @@ fn socket_send_async(
     task_object(ctx, state)
 }
 
-fn socket_recv(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_recv(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let size = match get_uint_arg(ctx, 1, "Socket.recv") {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -657,7 +655,7 @@ fn socket_recv(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle)
 fn socket_recv_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let size = match get_uint_arg(ctx, 1, "Socket.recv_async") {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -691,7 +689,7 @@ fn socket_recv_async(
     task_object(ctx, state)
 }
 
-fn socket_close(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_close(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.socket.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -706,7 +704,7 @@ fn socket_close(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandl
     utils::nil()
 }
 
-fn socket_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let locked = match handle.socket.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -719,7 +717,7 @@ fn socket_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketH
     Ok(PengBindedCell::Mutable(PengCell::Bool(locked.is_none())))
 }
 
-fn socket_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let socket = match clone_socket_for_action(&handle, "Socket.local_addr") {
         Ok(Some(socket)) => socket,
         Ok(None) => return utils::nil(),
@@ -735,7 +733,7 @@ fn socket_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketH
     }
 }
 
-fn socket_peer_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> NativeResult {
+fn socket_peer_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
     let socket = match clone_socket_for_action(&handle, "Socket.peer_addr") {
         Ok(Some(socket)) => socket,
         Ok(None) => return utils::nil(),
@@ -751,7 +749,7 @@ fn socket_peer_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHa
 fn socket_set_broadcast(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let value = match get_bool_arg(ctx, 1, "Socket.set_broadcast") {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -775,7 +773,7 @@ fn socket_set_broadcast(
 fn socket_set_read_timeout(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let timeout = match get_optional_uint_arg(ctx, 1, "Socket.set_read_timeout") {
         Ok(timeout) => timeout,
         Err(e) => return Err(e),
@@ -799,7 +797,7 @@ fn socket_set_read_timeout(
 fn socket_set_write_timeout(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let timeout = match get_optional_uint_arg(ctx, 1, "Socket.set_write_timeout") {
         Ok(timeout) => timeout,
         Err(e) => return Err(e),
@@ -823,7 +821,7 @@ fn socket_set_write_timeout(
 fn socket_set_non_blocking(
     ctx: &mut PengNativeFunctionCallContext,
     handle: UdpSocketHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let value = match get_bool_arg(ctx, 1, "Socket.set_non_blocking") {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -844,7 +842,7 @@ fn socket_set_non_blocking(
     }
 }
 
-fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> NativeResult {
+fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => Ok(PengBindedCell::Mutable(PengCell::Bool(false))),
@@ -857,7 +855,7 @@ fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<U
     }
 }
 
-fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> NativeResult {
+fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
     let result = match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => return utils::nil(),
@@ -881,7 +879,7 @@ fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskSta
     }
 }
 
-fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> NativeResult {
+fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => utils::nil(),
@@ -898,7 +896,7 @@ fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskS
     }
 }
 
-fn packet_object(ctx: &mut PengNativeFunctionCallContext, packet: UdpPacketData) -> NativeResult {
+fn packet_object(ctx: &mut PengNativeFunctionCallContext, packet: UdpPacketData) -> Result<PengBindedCell, PengError> {
     let data = utils::string_cell(ctx, packet.data);
     let host = utils::string_cell(ctx, packet.host);
     let addr = utils::string_cell(ctx, packet.addr);

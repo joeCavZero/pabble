@@ -9,8 +9,6 @@ use penguin::prelude::*;
 
 use super::utils;
 
-type NativeResult = Result<PengBindedCell, PengError>;
-
 #[derive(Debug, Clone)]
 struct TcpClientData {
     host: String,
@@ -215,7 +213,7 @@ fn server_type_value(peng: &mut PengEnv) -> PengValue {
     PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
-fn connect(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn connect(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let client = match get_client_data_from_args(ctx, "connect") {
         Ok(client) => client,
         Err(e) => return Err(e),
@@ -229,7 +227,7 @@ fn connect(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     connection_object(ctx, handle)
 }
 
-fn connect_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn connect_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let client = match get_client_data_from_args(ctx, "connect_async") {
         Ok(client) => client,
         Err(e) => return Err(e),
@@ -256,7 +254,7 @@ fn connect_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     task_object(ctx, state)
 }
 
-fn listen(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn listen(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let server = match get_server_data_from_args(ctx, "listen") {
         Ok(server) => server,
         Err(e) => return Err(e),
@@ -270,7 +268,7 @@ fn listen(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     server_handle_object(ctx, handle)
 }
 
-fn listen_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn listen_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let server = match get_server_data_from_args(ctx, "listen_async") {
         Ok(server) => server,
         Err(e) => return Err(e),
@@ -297,19 +295,19 @@ fn listen_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
     task_object(ctx, state)
 }
 
-fn client_connect(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn client_connect(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     connect(ctx)
 }
 
-fn client_connect_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn client_connect_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     connect_async(ctx)
 }
 
-fn server_listen(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn server_listen(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     listen(ctx)
 }
 
-fn server_listen_async(ctx: &mut PengNativeFunctionCallContext) -> NativeResult {
+fn server_listen_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     listen_async(ctx)
 }
 
@@ -419,7 +417,7 @@ fn execute_listen_data(server: TcpServerData, function_name: &str) -> Result<Tcp
 fn connection_object(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let read_handle = handle.clone();
     let read_line_handle = handle.clone();
     let read_all_handle = handle.clone();
@@ -551,7 +549,7 @@ fn connection_object(
     )
 }
 
-fn server_handle_object(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> NativeResult {
+fn server_handle_object(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
     let accept_handle = handle.clone();
     let accept_async_handle = handle.clone();
     let close_handle = handle.clone();
@@ -605,7 +603,7 @@ fn server_handle_object(ctx: &mut PengNativeFunctionCallContext, handle: TcpServ
     )
 }
 
-fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> NativeResult {
+fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
     let is_finished_state = state.clone();
     let get_state = state.clone();
     let error_state = state.clone();
@@ -638,7 +636,7 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTask
     )
 }
 
-fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> NativeResult {
+fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
     let size = match get_uint_arg(ctx, 1, "Connection.read") {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -693,7 +691,7 @@ fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectio
 fn connection_read_line(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut bytes = Vec::new();
     let mut close_after = false;
 
@@ -761,7 +759,7 @@ fn connection_read_line(
 fn connection_read_all(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut output = String::new();
 
     let mut locked = match handle.stream.lock() {
@@ -800,7 +798,7 @@ fn connection_read_all(
 fn connection_read_byte(
     _ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut buffer = [0u8; 1];
 
     let mut locked = match handle.stream.lock() {
@@ -838,7 +836,7 @@ fn connection_read_byte(
     }
 }
 
-fn connection_write(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> NativeResult {
+fn connection_write(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
     let data = match get_string_arg(ctx, 1, "Connection.write") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -850,7 +848,7 @@ fn connection_write(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnecti
 fn connection_write_line(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut data = match get_string_arg(ctx, 1, "Connection.write_line") {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -861,7 +859,7 @@ fn connection_write_line(
     write_to_connection(handle, data.as_bytes(), "Connection.write_line")
 }
 
-fn connection_flush(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> NativeResult {
+fn connection_flush(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -885,7 +883,7 @@ fn connection_flush(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnect
     }
 }
 
-fn connection_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> NativeResult {
+fn connection_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -903,7 +901,7 @@ fn connection_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnect
 fn connection_is_closed(
     _ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -919,7 +917,7 @@ fn connection_is_closed(
 fn connection_peer_addr(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -946,7 +944,7 @@ fn connection_peer_addr(
 fn connection_local_addr(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -973,7 +971,7 @@ fn connection_local_addr(
 fn connection_set_read_timeout(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let timeout = match get_optional_uint_arg(ctx, 1, "Connection.set_read_timeout") {
         Ok(timeout) => timeout,
         Err(e) => return Err(e),
@@ -1005,7 +1003,7 @@ fn connection_set_read_timeout(
 fn connection_set_write_timeout(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let timeout = match get_optional_uint_arg(ctx, 1, "Connection.set_write_timeout") {
         Ok(timeout) => timeout,
         Err(e) => return Err(e),
@@ -1037,7 +1035,7 @@ fn connection_set_write_timeout(
 fn connection_set_non_blocking(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpConnectionHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let value = match get_bool_arg(ctx, 1, "Connection.set_non_blocking") {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -1066,7 +1064,7 @@ fn connection_set_non_blocking(
     }
 }
 
-fn server_accept(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> NativeResult {
+fn server_accept(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1091,7 +1089,7 @@ fn server_accept(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandl
 fn server_accept_async(
     ctx: &mut PengNativeFunctionCallContext,
     handle: TcpServerHandle,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let listener = {
         let locked = match handle.listener.lock() {
             Ok(locked) => locked,
@@ -1139,7 +1137,7 @@ fn server_accept_async(
     task_object(ctx, state)
 }
 
-fn server_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> NativeResult {
+fn server_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1154,7 +1152,7 @@ fn server_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandl
     utils::nil()
 }
 
-fn server_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> NativeResult {
+fn server_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
     let locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1167,7 +1165,7 @@ fn server_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerH
     Ok(PengBindedCell::Mutable(PengCell::Bool(locked.is_none())))
 }
 
-fn server_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> NativeResult {
+fn server_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
     let locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1191,7 +1189,7 @@ fn server_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerH
     }
 }
 
-fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> NativeResult {
+fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => Ok(PengBindedCell::Mutable(PengCell::Bool(false))),
@@ -1204,7 +1202,7 @@ fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<T
     }
 }
 
-fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> NativeResult {
+fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
     let result = match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => return utils::nil(),
@@ -1225,7 +1223,7 @@ fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskSta
     }
 }
 
-fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> NativeResult {
+fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => utils::nil(),
@@ -1279,7 +1277,7 @@ fn write_to_connection(
     handle: TcpConnectionHandle,
     data: &[u8],
     function_name: &str,
-) -> NativeResult {
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
