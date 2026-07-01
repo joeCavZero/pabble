@@ -1,0 +1,52 @@
+import("io") as io
+import("time") as time
+
+func main() {
+    io:println("===== TIME MODULE TEST =====")
+
+    io:println("unix timestamp:")
+    io:println(time:unix())
+
+    io:println("current millis:")
+    io:println(time:millis())
+
+    io:println("current nanos:")
+    io:println(time:nanos())
+
+    io:println("monotonic nanos:")
+    io:println(time:monotonic_nanos())
+
+    var now = time:now()
+
+    io:println("now.timestamp:")
+    io:println(now.timestamp)
+
+    io:println("now.millis:")
+    io:println(now.millis)
+
+    io:println("now.nanos:")
+    io:println(now.nanos)
+
+    io:println("now.format():")
+    io:println(now.format())
+
+    var duration = time:duration(1500)
+
+    io:println("duration.millis:")
+    io:println(duration.millis)
+
+    io:println("duration.seconds():")
+    io:println(duration.seconds())
+
+    io:println("duration.nanos():")
+    io:println(duration.nanos())
+
+    var other = time:Duration:{
+        millis = 500
+    }
+
+    var total = duration.add(other)
+
+    io:println("duration + other:")
+    io:println(total.millis)
+}

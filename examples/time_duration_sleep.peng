@@ -1,0 +1,41 @@
+import("io") as io
+import("time") as time
+import("threads") as threads
+
+func ticker(name, delay, count) {
+    for (var i = 0; i < count; i += 1) {
+        io:println(name, "tick", i)
+
+        delay.sleep()
+    }
+
+    return name
+}
+
+func main() {
+    io:println("===== TIME DURATION SLEEP TEST =====")
+
+    var fast_delay = time:Duration:{
+        millis = 300
+    }
+
+    var slow_delay = time:Duration:{
+        millis = 700
+    }
+
+    var fast = threads:spawn(ticker, "fast", fast_delay, 5)
+    var slow = threads:spawn(ticker, "slow", slow_delay, 3)
+
+    while !fast.is_finished() || !slow.is_finished() {
+        io:println("main thread is alive")
+        threads:yield()
+    }
+
+    io:println("fast result:")
+    io:println(fast.get())
+
+    io:println("slow result:")
+    io:println(slow.get())
+
+    io:println("done")
+}

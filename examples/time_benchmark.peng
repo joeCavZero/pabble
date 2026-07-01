@@ -1,0 +1,36 @@
+import("io") as io
+import("time") as time
+
+func work() {
+    var total = 0
+
+    for (var i = 0; i < 100000; i += 1) {
+        total += i
+    }
+
+    return total
+}
+
+func main() {
+    io:println("===== TIME BENCHMARK TEST =====")
+
+    var start = time:instant()
+
+    var result = work()
+
+    var end = time:instant()
+
+    io:println("result:")
+    io:println(result)
+
+    io:println("elapsed ms:")
+    io:println(start.elapsed_ms(end))
+
+    io:println("elapsed nanos:")
+    io:println(start.elapsed_nanos(end))
+
+    var duration = start.elapsed(end)
+
+    io:println("duration object millis:")
+    io:println(duration.millis)
+}

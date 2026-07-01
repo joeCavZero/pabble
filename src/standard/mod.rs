@@ -11,3 +11,4 @@ pub mod fs;
 pub mod math;
 pub mod http;
 pub mod os;
+pub mod time;
