@@ -2,13 +2,19 @@ import("http") as http
 import("io") as io
 
 func main() {
-    var client = http:new_client({
+    var client = http:Client:{
         timeout = 5000,
         max_redirects = 10,
         https_only = false
-    })
+    }
 
-    var req = http:new_request("GET", "https://example.com", nil)
+    var req = http:Request:{
+        method = "GET",
+        url = "https://example.com",
+        body = nil,
+        headers = {}
+    }
+
     req = http:set_header(req, "User-Agent", "Penguin")
 
     var res = client.send(req)

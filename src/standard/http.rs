@@ -60,10 +60,12 @@ impl HttpClientConfig {
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_immutable_native_function(peng, "new_client", client).unwrap();
-    module
-        .register_immutable_native_function(peng, "new_request", new_request)
-        .unwrap();
+    let client_type = client_type_value(peng);
+    module.register_immutable_global(peng, "Client", client_type).unwrap();
+
+    let request_type = request_type_value(peng);
+    module.register_immutable_global(peng, "Request", request_type).unwrap();
+
     module.register_immutable_native_function(peng, "send", send).unwrap();
 
     module
@@ -83,68 +85,82 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     module
 }
 
-fn client(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let config = match ctx.get_arg_cell(0) {
-        Some(arg) => {
-            let fields = match get_object_fields_from_cell(ctx, arg, "client") {
-                Ok(fields) => fields,
-                Err(e) => return Err(e),
-            };
+fn client_type_value(peng: &mut PengEnv) -> PengValue {
+    let mut fields = HashMap::new();
 
-            match client_config_from_fields(ctx, &fields, "client") {
-                Ok(config) => config,
-                Err(e) => return Err(e),
-            }
-        }
+    let send_ptr = peng.create_heap_value(PengValue::Box(PengBox::Function(
+        PengFunction::new_native(client_send),
+    )));
 
-        None => HttpClientConfig::default(),
-    };
+    let send_async_ptr = peng.create_heap_value(PengValue::Box(PengBox::Function(
+        PengFunction::new_native(client_send_async),
+    )));
 
-    new_client_object(ctx, config)
+    fields.insert(
+        peng.ensure_pooled_name_ptr("timeout".to_string()),
+        PengBindedCell::Mutable(PengCell::Uint(30000)),
+    );
+
+    fields.insert(
+        peng.ensure_pooled_name_ptr("max_redirects".to_string()),
+        PengBindedCell::Mutable(PengCell::Uint(10)),
+    );
+
+    fields.insert(
+        peng.ensure_pooled_name_ptr("https_only".to_string()),
+        PengBindedCell::Mutable(PengCell::Bool(false)),
+    );
+
+    fields.insert(
+        peng.ensure_pooled_name_ptr("send".to_string()),
+        PengBindedCell::Immutable(PengCell::Reference(send_ptr)),
+    );
+
+    fields.insert(
+        peng.ensure_pooled_name_ptr("send_async".to_string()),
+        PengBindedCell::Immutable(PengCell::Reference(send_async_ptr)),
+    );
+
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
+        fields,
+    })))
 }
 
-fn new_request(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    let method = match get_string_arg(ctx, 0, "new_request") {
-        Ok(method) => method,
-        Err(e) => return Err(e),
-    };
+fn request_type_value(peng: &mut PengEnv) -> PengValue {
+    let mut fields = HashMap::new();
 
-    let url = match get_string_arg(ctx, 1, "new_request") {
-        Ok(url) => url,
-        Err(e) => return Err(e),
-    };
+    let method = string_binded_cell_from_env(peng, "GET".to_string());
+    let url = string_binded_cell_from_env(peng, "".to_string());
 
-    let body_arg = match ctx.get_arg_cell(2) {
-        Some(arg) => Some(arg.clone()),
-        None => None,
-    };
-
-    let body_cell = match body_arg {
-        Some(arg) => match arg.value() {
-            PengCell::Nil => PengBindedCell::Mutable(PengCell::Nil),
-            _ => {
-                let body = match cell_to_string(ctx, &arg, "new_request") {
-                    Ok(body) => body,
-                    Err(e) => return Err(e),
-                };
-
-                string_cell(ctx, body)
-            }
+    let headers_ptr = peng.create_heap_value(PengValue::Box(PengBox::Object(
+        PengObject {
+            fields: HashMap::new(),
         },
+    )));
 
-        None => PengBindedCell::Mutable(PengCell::Nil),
-    };
+    fields.insert(
+        peng.ensure_pooled_name_ptr("method".to_string()),
+        method,
+    );
 
-    let headers_fields = match ctx.get_arg_cell(3) {
-        Some(arg) => match get_object_fields_from_cell(ctx, arg, "new_request") {
-            Ok(fields) => fields,
-            Err(e) => return Err(e),
-        },
+    fields.insert(
+        peng.ensure_pooled_name_ptr("url".to_string()),
+        url,
+    );
 
-        None => HashMap::new(),
-    };
+    fields.insert(
+        peng.ensure_pooled_name_ptr("body".to_string()),
+        PengBindedCell::Mutable(PengCell::Nil),
+    );
 
-    request_object(ctx, method, url, body_cell, headers_fields)
+    fields.insert(
+        peng.ensure_pooled_name_ptr("headers".to_string()),
+        PengBindedCell::Mutable(PengCell::Reference(headers_ptr)),
+    );
+
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
+        fields,
+    })))
 }
 
 fn send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -205,18 +221,18 @@ fn set_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
         Err(e) => return Err(e),
     };
 
-    let request_fields = match get_object_fields_from_cell(ctx, &request_arg, "set_header") {
+    let request_fields = match utils::get_object_fields_from_cell(ctx, &request_arg) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
 
-    let mut headers_fields = match get_headers_from_request(ctx, &request_fields, "set_header") {
+    let mut headers_fields = match get_headers_from_request(ctx, &request_fields) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
 
     let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name);
-    headers_fields.insert(name_ptr, string_cell(ctx, value));
+    headers_fields.insert(name_ptr, utils::string_cell(ctx, value));
 
     rebuild_request_with_headers(ctx, request_fields, headers_fields, "set_header")
 }
@@ -236,12 +252,12 @@ fn get_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
         Err(e) => return Err(e),
     };
 
-    let request_fields = match get_object_fields_from_cell(ctx, &request_arg, "get_header") {
+    let request_fields = match utils::get_object_fields_from_cell(ctx, &request_arg) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
 
-    let headers_fields = match get_headers_from_request(ctx, &request_fields, "get_header") {
+    let headers_fields = match get_headers_from_request(ctx, &request_fields) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
@@ -249,12 +265,12 @@ fn get_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
     let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name);
 
     match headers_fields.get(&name_ptr) {
-        Some(value) => match cell_to_string(ctx, value, "get_header") {
-            Ok(value) => string(ctx, value),
+        Some(value) => match utils::cell_to_string(ctx, value) {
+            Ok(value) => utils::string(ctx, value),
             Err(e) => Err(e),
         },
 
-        None => nil(),
+        None => utils::nil(),
     }
 }
 
@@ -273,12 +289,12 @@ fn remove_header(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCe
         Err(e) => return Err(e),
     };
 
-    let request_fields = match get_object_fields_from_cell(ctx, &request_arg, "remove_header") {
+    let request_fields = match utils::get_object_fields_from_cell(ctx, &request_arg) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
 
-    let mut headers_fields = match get_headers_from_request(ctx, &request_fields, "remove_header") {
+    let mut headers_fields = match get_headers_from_request(ctx, &request_fields) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
@@ -296,17 +312,17 @@ fn status_text(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell
     };
 
     if code > u16::MAX as usize {
-        return nil();
+        return utils::nil();
     }
 
     let status = match ureq::http::StatusCode::from_u16(code as u16) {
         Ok(status) => status,
-        Err(_) => return nil(),
+        Err(_) => return utils::nil(),
     };
 
     match status.canonical_reason() {
-        Some(reason) => string(ctx, reason.to_string()),
-        None => nil(),
+        Some(reason) => utils::string(ctx, reason.to_string()),
+        None => utils::nil(),
     }
 }
 
@@ -340,94 +356,45 @@ fn build_agent(config: HttpClientConfig) -> ureq::Agent {
 fn client_config_from_fields(
     ctx: &mut PengNativeFunctionCallContext,
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    function_name: &str,
 ) -> Result<HttpClientConfig, PengError> {
     let mut config = HttpClientConfig::default();
 
-    match get_optional_uint_field(ctx, fields, "timeout", function_name) {
+    match get_optional_uint_field(ctx, fields, "timeout") {
         Ok(value) => config.timeout = value,
         Err(e) => return Err(e),
     }
 
-    match get_optional_uint_field(ctx, fields, "max_redirects", function_name) {
+    match get_optional_uint_field(ctx, fields, "max_redirects") {
         Ok(Some(value)) => config.max_redirects = value,
         Ok(None) => {}
         Err(e) => return Err(e),
     }
 
-    match get_optional_bool_field(ctx, fields, "max_redirects_will_error", function_name) {
+    match get_optional_bool_field(ctx, fields, "max_redirects_will_error") {
         Ok(Some(value)) => config.max_redirects_will_error = value,
         Ok(None) => {}
         Err(e) => return Err(e),
     }
 
-    match get_optional_bool_field(ctx, fields, "https_only", function_name) {
+    match get_optional_bool_field(ctx, fields, "https_only") {
         Ok(Some(value)) => config.https_only = value,
         Ok(None) => {}
         Err(e) => return Err(e),
     }
 
-    match get_optional_bool_field(ctx, fields, "status_as_error", function_name) {
+    match get_optional_bool_field(ctx, fields, "status_as_error") {
         Ok(Some(value)) => config.status_as_error = value,
         Ok(None) => {}
         Err(e) => return Err(e),
     }
 
-    match get_optional_bool_field(ctx, fields, "allow_non_standard_methods", function_name) {
+    match get_optional_bool_field(ctx, fields, "allow_non_standard_methods") {
         Ok(Some(value)) => config.allow_non_standard_methods = value,
         Ok(None) => {}
         Err(e) => return Err(e),
     }
 
     Ok(config)
-}
-
-fn new_client_object(
-    ctx: &mut PengNativeFunctionCallContext,
-    config: HttpClientConfig,
-) -> Result<PengBindedCell, PengError> {
-    let timeout_cell = match config.timeout {
-        Some(timeout) => PengBindedCell::Mutable(PengCell::Uint(timeout)),
-        None => PengBindedCell::Mutable(PengCell::Nil),
-    };
-
-    let send_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(client_send)));
-    let send_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(client_send_async)));
-
-    utils::new_object(
-        ctx,
-        vec![
-            ("timeout", timeout_cell),
-            (
-                "max_redirects",
-                PengBindedCell::Mutable(PengCell::Uint(config.max_redirects)),
-            ),
-            (
-                "max_redirects_will_error",
-                PengBindedCell::Mutable(PengCell::Bool(config.max_redirects_will_error)),
-            ),
-            (
-                "https_only",
-                PengBindedCell::Mutable(PengCell::Bool(config.https_only)),
-            ),
-            (
-                "status_as_error",
-                PengBindedCell::Mutable(PengCell::Bool(config.status_as_error)),
-            ),
-            (
-                "allow_non_standard_methods",
-                PengBindedCell::Mutable(PengCell::Bool(config.allow_non_standard_methods)),
-            ),
-            (
-                "send",
-                PengBindedCell::Immutable(PengCell::Reference(send_ptr)),
-            ),
-            (
-                "send_async",
-                PengBindedCell::Immutable(PengCell::Reference(send_async_ptr)),
-            ),
-        ],
-    )
 }
 
 fn request_object(
@@ -437,9 +404,9 @@ fn request_object(
     body: PengBindedCell,
     headers: HashMap<PengNamePoolPtr, PengBindedCell>,
 ) -> Result<PengBindedCell, PengError> {
-    let method_cell = string_cell(ctx, method);
-    let url_cell = string_cell(ctx, url);
-    let headers_cell = object_from_fields(ctx, headers);
+    let method_cell = utils::string_cell(ctx, method);
+    let url_cell = utils::string_cell(ctx, url);
+    let headers_cell = utils::object_from_fields(ctx, headers);
 
     utils::new_object(
         ctx,
@@ -479,10 +446,9 @@ fn rebuild_request_with_headers(
 fn get_headers_from_request(
     ctx: &mut PengNativeFunctionCallContext,
     request_fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    function_name: &str,
 ) -> Result<HashMap<PengNamePoolPtr, PengBindedCell>, PengError> {
     match get_field(ctx, request_fields, "headers") {
-        Some(headers) => get_object_fields_from_cell(ctx, &headers, function_name),
+        Some(headers) => utils::get_object_fields_from_cell(ctx, &headers),
         None => Ok(HashMap::new()),
     }
 }
@@ -490,12 +456,11 @@ fn get_headers_from_request(
 fn get_optional_body_from_request(
     ctx: &mut PengNativeFunctionCallContext,
     request_fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    function_name: &str,
 ) -> Result<Option<String>, PengError> {
     match get_field(ctx, request_fields, "body") {
         Some(body) => match body.value() {
             PengCell::Nil => Ok(None),
-            _ => match cell_to_string(ctx, &body, function_name) {
+            _ => match utils::cell_to_string(ctx, &body) {
                 Ok(body) => Ok(Some(body)),
                 Err(e) => Err(e),
             },
@@ -523,7 +488,7 @@ fn fields_to_string_pairs(
             }
         };
 
-        let value = match cell_to_string(ctx, value, function_name) {
+        let value = match utils::cell_to_string(ctx, value) {
             Ok(value) => value,
             Err(e) => return Err(e),
         };
@@ -541,7 +506,7 @@ fn get_required_string_field(
     function_name: &str,
 ) -> Result<String, PengError> {
     match get_field(ctx, fields, name) {
-        Some(value) => cell_to_string(ctx, &value, function_name),
+        Some(value) => utils::cell_to_string(ctx, &value),
         None => Err(PengError::CannotCallValue(format!(
             "http:{}() missing '{}' field",
             function_name, name
@@ -553,12 +518,11 @@ fn get_optional_uint_field(
     ctx: &mut PengNativeFunctionCallContext,
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
     name: &str,
-    function_name: &str,
 ) -> Result<Option<usize>, PengError> {
     match get_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
-            _ => match cell_to_uint(&value, function_name) {
+            _ => match utils::cell_to_uint(&value) {
                 Ok(value) => Ok(Some(value)),
                 Err(e) => Err(e),
             },
@@ -572,12 +536,11 @@ fn get_optional_bool_field(
     ctx: &mut PengNativeFunctionCallContext,
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
     name: &str,
-    function_name: &str,
 ) -> Result<Option<bool>, PengError> {
     match get_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
-            _ => match cell_to_bool(&value, function_name) {
+            _ => match utils::cell_to_bool(&value) {
                 Ok(value) => Ok(Some(value)),
                 Err(e) => Err(e),
             },
@@ -615,7 +578,7 @@ fn get_string_arg(
         }
     };
 
-    cell_to_string(ctx, arg, function_name)
+    utils::cell_to_string(ctx, arg)
 }
 
 fn get_uint_arg(
@@ -633,133 +596,7 @@ fn get_uint_arg(
         }
     };
 
-    cell_to_uint(arg, function_name)
-}
-
-fn cell_to_string(
-    ctx: &PengNativeFunctionCallContext,
-    cell: &PengBindedCell,
-    function_name: &str,
-) -> Result<String, PengError> {
-    match cell.value() {
-        PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
-            Some(PengValue::Box(PengBox::String(value))) => Ok(value.clone()),
-
-            Some(_) => Err(PengError::CannotCallValue(format!(
-                "http:{}() expected string value",
-                function_name
-            ))),
-
-            None => Err(PengError::CannotCallValue(format!(
-                "http:{}() got missing heap string value",
-                function_name
-            ))),
-        },
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "http:{}() expected string value",
-            function_name
-        ))),
-    }
-}
-
-fn cell_to_uint(cell: &PengBindedCell, function_name: &str) -> Result<usize, PengError> {
-    match cell.value() {
-        PengCell::Uint(value) => Ok(*value),
-
-        PengCell::Int(value) => {
-            if *value < 0 {
-                return Err(PengError::CannotCallValue(format!(
-                    "http:{}() expected non-negative integer value",
-                    function_name
-                )));
-            }
-
-            Ok(*value as usize)
-        }
-
-        PengCell::Byte(value) => Ok(*value as usize),
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "http:{}() expected unsigned integer value",
-            function_name
-        ))),
-    }
-}
-
-fn cell_to_bool(cell: &PengBindedCell, function_name: &str) -> Result<bool, PengError> {
-    match cell.value() {
-        PengCell::Bool(value) => Ok(*value),
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "http:{}() expected bool value",
-            function_name
-        ))),
-    }
-}
-
-fn get_object_fields_from_cell(
-    ctx: &PengNativeFunctionCallContext,
-    cell: &PengBindedCell,
-    function_name: &str,
-) -> Result<HashMap<PengNamePoolPtr, PengBindedCell>, PengError> {
-    match cell.value() {
-        PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
-            Some(PengValue::Box(PengBox::Object(object))) => Ok(object.fields.clone()),
-
-            Some(_) => Err(PengError::CannotCallValue(format!(
-                "http:{}() expected object value",
-                function_name
-            ))),
-
-            None => Err(PengError::CannotCallValue(format!(
-                "http:{}() got missing heap object value",
-                function_name
-            ))),
-        },
-
-        _ => Err(PengError::CannotCallValue(format!(
-            "http:{}() expected object value",
-            function_name
-        ))),
-    }
-}
-
-fn nil() -> Result<PengBindedCell, PengError> {
-    Ok(PengBindedCell::Mutable(PengCell::Nil))
-}
-
-fn string(ctx: &mut PengNativeFunctionCallContext, value: String) -> Result<PengBindedCell, PengError> {
-    Ok(string_cell(ctx, value))
-}
-
-fn string_cell(ctx: &mut PengNativeFunctionCallContext, value: String) -> PengBindedCell {
-    let ptr = ctx.create_box(PengBox::String(value));
-
-    PengBindedCell::Mutable(PengCell::Reference(ptr))
-}
-
-fn object_from_fields(
-    ctx: &mut PengNativeFunctionCallContext,
-    fields: HashMap<PengNamePoolPtr, PengBindedCell>,
-) -> PengBindedCell {
-    let ptr = ctx.create_box(PengBox::Object(PengObject { fields }));
-
-    PengBindedCell::Mutable(PengCell::Reference(ptr))
-}
-
-fn object_from_string_pairs(
-    ctx: &mut PengNativeFunctionCallContext,
-    values: Vec<(String, String)>,
-) -> PengBindedCell {
-    let mut fields = HashMap::new();
-
-    for (name, value) in values {
-        let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name);
-        fields.insert(name_ptr, string_cell(ctx, value));
-    }
-
-    object_from_fields(ctx, fields)
+    utils::cell_to_uint(arg)
 }
 
 fn client_send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -791,17 +628,17 @@ fn get_send_data(
 
     let (client_config, request_fields) = match second_arg {
         Some(request_arg) => {
-            let client_fields = match get_object_fields_from_cell(ctx, &first_arg, function_name) {
+            let client_fields = match utils::get_object_fields_from_cell(ctx, &first_arg) {
                 Ok(fields) => fields,
                 Err(e) => return Err(e),
             };
 
-            let client_config = match client_config_from_fields(ctx, &client_fields, function_name) {
+            let client_config = match client_config_from_fields(ctx, &client_fields) {
                 Ok(config) => config,
                 Err(e) => return Err(e),
             };
 
-            let request_fields = match get_object_fields_from_cell(ctx, &request_arg, function_name) {
+            let request_fields = match utils::get_object_fields_from_cell(ctx, &request_arg) {
                 Ok(fields) => fields,
                 Err(e) => return Err(e),
             };
@@ -810,7 +647,7 @@ fn get_send_data(
         }
 
         None => {
-            let request_fields = match get_object_fields_from_cell(ctx, &first_arg, function_name) {
+            let request_fields = match utils::get_object_fields_from_cell(ctx, &first_arg) {
                 Ok(fields) => fields,
                 Err(e) => return Err(e),
             };
@@ -829,7 +666,7 @@ fn get_send_data(
         Err(e) => return Err(e),
     };
 
-    let headers_fields = match get_headers_from_request(ctx, &request_fields, function_name) {
+    let headers_fields = match get_headers_from_request(ctx, &request_fields) {
         Ok(fields) => fields,
         Err(e) => return Err(e),
     };
@@ -839,7 +676,7 @@ fn get_send_data(
         Err(e) => return Err(e),
     };
 
-    let body = match get_optional_body_from_request(ctx, &request_fields, function_name) {
+    let body = match get_optional_body_from_request(ctx, &request_fields) {
         Ok(body) => body,
         Err(e) => return Err(e),
     };
@@ -974,10 +811,10 @@ fn response_data_to_object(
     ctx: &mut PengNativeFunctionCallContext,
     response: HttpResponseData,
 ) -> Result<PengBindedCell, PengError> {
-    let reason = string_cell(ctx, response.reason);
-    let headers = object_from_string_pairs(ctx, response.headers);
-    let body = string_cell(ctx, response.body);
-    let url = string_cell(ctx, response.url);
+    let reason = utils::string_cell(ctx, response.reason);
+    let headers = utils::object_from_string_pairs(ctx, response.headers);
+    let body = utils::string_cell(ctx, response.body);
+    let url = utils::string_cell(ctx, response.url);
 
     utils::new_object(
         ctx,
@@ -1053,7 +890,7 @@ fn task_get(
 ) -> Result<PengBindedCell, PengError> {
     let result = match state.lock() {
         Ok(locked) => match &*locked {
-            HttpTaskState::Running => return nil(),
+            HttpTaskState::Running => return utils::nil(),
             HttpTaskState::Finished(result) => result.clone(),
         },
 
@@ -1076,11 +913,11 @@ fn task_error(
 ) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
-            HttpTaskState::Running => nil(),
+            HttpTaskState::Running => utils::nil(),
 
             HttpTaskState::Finished(result) => match result {
-                Ok(_) => nil(),
-                Err(e) => string(ctx, e.clone()),
+                Ok(_) => utils::nil(),
+                Err(e) => utils::string(ctx, e.clone()),
             },
         },
 
@@ -1088,4 +925,10 @@ fn task_error(
             "http task lock failed".to_string(),
         )),
     }
+}
+
+fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
+    let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
+
+    PengBindedCell::Mutable(PengCell::Reference(ptr))
 }
