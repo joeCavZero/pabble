@@ -1,0 +1,26 @@
+import("udp") as udp
+import("io") as io
+
+func main() {
+    var config = udp:Socket:{
+        host = "127.0.0.1",
+        port = 9000,
+        timeout = 5000
+    }
+
+    var socket = config.bind()
+
+    io:println("UDP server listening on:")
+    io:println(socket.local_addr())
+
+    while true {
+        var packet = socket.recv_from(1024)
+
+        if packet != nil {
+            io:println("received:", packet.data)
+            io:println("from:", packet.host, packet.port)
+
+            socket.send_to("echo: " .. packet.data, packet.host, packet.port)
+        }
+    }
+}

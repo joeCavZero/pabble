@@ -110,7 +110,7 @@ fn client_type_value(peng: &mut PengEnv) -> PengValue {
 
     fields.insert(
         peng.ensure_pooled_name_ptr("host".to_string()),
-        string_binded_cell_from_env(peng, "127.0.0.1".to_string()),
+        utils::string_binded_cell_from_env(peng, "127.0.0.1".to_string()),
     );
 
     fields.insert(
@@ -169,7 +169,7 @@ fn server_type_value(peng: &mut PengEnv) -> PengValue {
 
     fields.insert(
         peng.ensure_pooled_name_ptr("host".to_string()),
-        string_binded_cell_from_env(peng, "0.0.0.0".to_string()),
+        utils::string_binded_cell_from_env(peng, "0.0.0.0".to_string()),
     );
 
     fields.insert(
@@ -339,7 +339,7 @@ fn execute_connect_data(
 
             TcpStream::connect_timeout(
                 &socket_addr,
-                Duration::from_millis(usize_to_u64_saturating(timeout)),
+                Duration::from_millis(utils::usize_to_u64_saturating(timeout)),
             )
         }
 
@@ -678,7 +678,7 @@ fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectio
         }
 
         Err(e) => {
-            if is_temporary_read_error(&e) {
+            if utils::is_temporary_read_error(&e) {
                 return utils::nil();
             }
 
@@ -730,7 +730,7 @@ fn connection_read_line(
                 }
 
                 Err(e) => {
-                    if is_temporary_read_error(&e) {
+                    if utils::is_temporary_read_error(&e) {
                         break;
                     }
 
@@ -785,7 +785,7 @@ fn connection_read_all(
         }
 
         Err(e) => {
-            if is_temporary_read_error(&e) {
+            if utils::is_temporary_read_error(&e) {
                 return utils::string(ctx, output);
             }
 
@@ -826,7 +826,7 @@ fn connection_read_byte(
         Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Byte(buffer[0]))),
 
         Err(e) => {
-            if is_temporary_read_error(&e) {
+            if utils::is_temporary_read_error(&e) {
                 return utils::nil();
             }
 
@@ -993,7 +993,7 @@ fn connection_set_read_timeout(
         None => return utils::nil(),
     };
 
-    match stream.set_read_timeout(timeout_to_duration(timeout)) {
+    match stream.set_read_timeout(utils::timeout_to_duration(timeout)) {
         Ok(_) => utils::nil(),
         Err(e) => Err(PengError::CannotCallValue(format!(
             "tcp:Connection.set_read_timeout() failed: {}",
@@ -1025,7 +1025,7 @@ fn connection_set_write_timeout(
         None => return utils::nil(),
     };
 
-    match stream.set_write_timeout(timeout_to_duration(timeout)) {
+    match stream.set_write_timeout(utils::timeout_to_duration(timeout)) {
         Ok(_) => utils::nil(),
         Err(e) => Err(PengError::CannotCallValue(format!(
             "tcp:Connection.set_write_timeout() failed: {}",
@@ -1512,7 +1512,7 @@ fn get_optional_string_field(
     name: &str,
     function_name: &str,
 ) -> Result<Option<String>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_string(ctx, &value) {
@@ -1534,7 +1534,7 @@ fn get_optional_uint_field(
     name: &str,
     function_name: &str,
 ) -> Result<Option<usize>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_uint(&value) {
@@ -1556,7 +1556,7 @@ fn get_optional_bool_field(
     name: &str,
     function_name: &str,
 ) -> Result<Option<bool>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_bool(&value) {
@@ -1569,19 +1569,6 @@ fn get_optional_bool_field(
         },
 
         None => Ok(None),
-    }
-}
-
-fn get_field(
-    ctx: &mut PengNativeFunctionCallContext,
-    fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    name: &str,
-) -> Option<PengBindedCell> {
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
-
-    match fields.get(&name_ptr) {
-        Some(value) => Some(value.clone()),
-        None => None,
     }
 }
 
@@ -1707,7 +1694,7 @@ fn apply_stream_config(
     non_blocking: bool,
     function_name: &str,
 ) -> Result<(), String> {
-    match stream.set_read_timeout(timeout_to_duration(read_timeout)) {
+    match stream.set_read_timeout(utils::timeout_to_duration(read_timeout)) {
         Ok(_) => {}
         Err(e) => {
             return Err(format!(
@@ -1717,7 +1704,7 @@ fn apply_stream_config(
         }
     }
 
-    match stream.set_write_timeout(timeout_to_duration(write_timeout)) {
+    match stream.set_write_timeout(utils::timeout_to_duration(write_timeout)) {
         Ok(_) => {}
         Err(e) => {
             return Err(format!(
@@ -1748,29 +1735,4 @@ fn apply_stream_config(
     }
 
     Ok(())
-}
-
-fn timeout_to_duration(value: Option<usize>) -> Option<Duration> {
-    match value {
-        Some(value) => Some(Duration::from_millis(usize_to_u64_saturating(value))),
-        None => None,
-    }
-}
-
-fn is_temporary_read_error(e: &std::io::Error) -> bool {
-    e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::TimedOut
-}
-
-fn usize_to_u64_saturating(value: usize) -> u64 {
-    if value > u64::MAX as usize {
-        u64::MAX
-    } else {
-        value as u64
-    }
-}
-
-fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
-    let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
-
-    PengBindedCell::Mutable(PengCell::Reference(ptr))
 }

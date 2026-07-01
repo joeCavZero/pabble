@@ -129,8 +129,8 @@ fn client_type_value(peng: &mut PengEnv) -> PengValue {
 fn request_type_value(peng: &mut PengEnv) -> PengValue {
     let mut fields = HashMap::new();
 
-    let method = string_binded_cell_from_env(peng, "GET".to_string());
-    let url = string_binded_cell_from_env(peng, "".to_string());
+    let method = utils::string_binded_cell_from_env(peng, "GET".to_string());
+    let url = utils::string_binded_cell_from_env(peng, "".to_string());
 
     let headers_ptr = peng.create_heap_value(PengValue::Box(PengBox::Object(
         PengObject {
@@ -435,7 +435,7 @@ fn rebuild_request_with_headers(
         Err(e) => return Err(e),
     };
 
-    let body = match get_field(ctx, &request_fields, "body") {
+    let body = match utils::get_map_field(ctx, &request_fields, "body") {
         Some(body) => body,
         None => PengBindedCell::Mutable(PengCell::Nil),
     };
@@ -447,7 +447,7 @@ fn get_headers_from_request(
     ctx: &mut PengNativeFunctionCallContext,
     request_fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
 ) -> Result<HashMap<PengNamePoolPtr, PengBindedCell>, PengError> {
-    match get_field(ctx, request_fields, "headers") {
+    match utils::get_map_field(ctx, request_fields, "headers") {
         Some(headers) => utils::get_object_fields_from_cell(ctx, &headers),
         None => Ok(HashMap::new()),
     }
@@ -457,7 +457,7 @@ fn get_optional_body_from_request(
     ctx: &mut PengNativeFunctionCallContext,
     request_fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
 ) -> Result<Option<String>, PengError> {
-    match get_field(ctx, request_fields, "body") {
+    match utils::get_map_field(ctx, request_fields, "body") {
         Some(body) => match body.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_string(ctx, &body) {
@@ -505,7 +505,7 @@ fn get_required_string_field(
     name: &str,
     function_name: &str,
 ) -> Result<String, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => utils::cell_to_string(ctx, &value),
         None => Err(PengError::CannotCallValue(format!(
             "http:{}() missing '{}' field",
@@ -519,7 +519,7 @@ fn get_optional_uint_field(
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
     name: &str,
 ) -> Result<Option<usize>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_uint(&value) {
@@ -537,7 +537,7 @@ fn get_optional_bool_field(
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
     name: &str,
 ) -> Result<Option<bool>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match utils::cell_to_bool(&value) {
@@ -547,19 +547,6 @@ fn get_optional_bool_field(
         },
 
         None => Ok(None),
-    }
-}
-
-fn get_field(
-    ctx: &mut PengNativeFunctionCallContext,
-    fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    name: &str,
-) -> Option<PengBindedCell> {
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
-
-    match fields.get(&name_ptr) {
-        Some(value) => Some(value.clone()),
-        None => None,
     }
 }
 
@@ -925,10 +912,4 @@ fn task_error(
             "http task lock failed".to_string(),
         )),
     }
-}
-
-fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
-    let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
-
-    PengBindedCell::Mutable(PengCell::Reference(ptr))
 }

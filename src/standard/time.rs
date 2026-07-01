@@ -790,7 +790,7 @@ fn get_required_uint_field(
     name: &str,
     function_name: &str,
 ) -> Result<usize, PengError> {
-    let cell = match get_field(ctx, fields, name) {
+    let cell = match utils::get_map_field(ctx, fields, name) {
         Some(cell) => cell,
         None => {
             return Err(PengError::CannotCallValue(format!(
@@ -803,19 +803,6 @@ fn get_required_uint_field(
     match utils::cell_to_uint(&cell) {
         Ok(value) => Ok(value),
         Err(e) => Err(e),
-    }
-}
-
-fn get_field(
-    ctx: &mut PengNativeFunctionCallContext,
-    fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    name: &str,
-) -> Option<PengBindedCell> {
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
-
-    match fields.get(&name_ptr) {
-        Some(value) => Some(value.clone()),
-        None => None,
     }
 }
 

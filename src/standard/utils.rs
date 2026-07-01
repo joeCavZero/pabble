@@ -1,4 +1,8 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    io::ErrorKind,
+    time::Duration,
+};
 
 use penguin::prelude::*;
 
@@ -143,4 +147,57 @@ pub fn object_from_string_pairs(
     }
 
     object_from_fields(ctx, fields)
+}
+
+
+pub fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
+    let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
+
+    PengBindedCell::Mutable(PengCell::Reference(ptr))
+}
+
+pub fn usize_to_u64_saturating(value: usize) -> u64 {
+    if value > u64::MAX as usize {
+        u64::MAX
+    } else {
+        value as u64
+    }
+}
+
+pub fn is_temporary_read_error(e: &std::io::Error) -> bool {
+    e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::TimedOut
+}
+
+
+pub fn get_map_field(
+    ctx: &mut PengNativeFunctionCallContext,
+    fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
+    name: &str,
+) -> Option<PengBindedCell> {
+    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
+
+    fields.get(&name_ptr).cloned()
+}
+
+pub fn get_object_field(
+    ctx: &mut PengNativeFunctionCallContext,
+    object_ptr: PengHeapPtr,
+    name: &str,
+) -> Result<Option<PengBindedCell>, PengError> {
+    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
+
+    match ctx.env_mut().get_heap_mut(object_ptr) {
+        Some(PengValue::Box(PengBox::Object(object))) => {
+            Ok(object.fields.get(&name_ptr).cloned())
+        }
+        Some(_) => Err(PengError::CannotCallValue(format!(
+            "object field access expected object for '{}'",
+            name
+        ))),
+        None => Err(PengError::HeapValueNotFound(object_ptr)),
+    }
+}
+
+pub fn timeout_to_duration(value: Option<usize>) -> Option<Duration> {
+    value.map(|value| Duration::from_millis(usize_to_u64_saturating(value)))
 }

@@ -1,0 +1,31 @@
+import("udp") as udp
+import("io") as io
+import("threads") as threads
+
+func main() {
+    var socket = udp:Socket:{
+        host = "127.0.0.1",
+        port = 9000
+    }.bind()
+
+    var task = socket.recv_from_async(1024)
+
+    while !task.is_finished() {
+        threads:yield()
+    }
+
+    var err = task.error()
+
+    if err != nil {
+        io:println("UDP error:")
+        io:println(err)
+        return nil
+    }
+
+    var packet = task.get()
+
+    if packet != nil {
+        io:println(packet.data)
+        io:println(packet.addr)
+    }
+}

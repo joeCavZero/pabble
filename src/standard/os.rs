@@ -83,7 +83,7 @@ fn process_type_value(peng: &mut PengEnv) -> PengValue {
         PengFunction::new_native(process_spawn),
     )));
 
-    let program = string_binded_cell_from_env(peng, "".to_string());
+    let program = utils::string_binded_cell_from_env(peng, "".to_string());
 
     let args_ptr = peng.create_heap_value(PengValue::Box(PengBox::Vector(PengVector {
         values: Vec::new(),
@@ -594,7 +594,7 @@ fn get_optional_string_field(
     name: &str,
     function_name: &str,
 ) -> Result<Option<String>, PengError> {
-    match get_field(ctx, fields, name) {
+    match utils::get_map_field(ctx, fields, name) {
         Some(value) => match value.value() {
             PengCell::Nil => Ok(None),
             _ => match strict_cell_to_string(ctx, &value, function_name) {
@@ -613,7 +613,7 @@ fn get_optional_string_vector_field(
     name: &str,
     function_name: &str,
 ) -> Result<Vec<String>, PengError> {
-    let value = match get_field(ctx, fields, name) {
+    let value = match utils::get_map_field(ctx, fields, name) {
         Some(value) => value,
         None => return Ok(Vec::new()),
     };
@@ -661,7 +661,7 @@ fn get_optional_string_object_field(
     name: &str,
     function_name: &str,
 ) -> Result<Vec<(String, String)>, PengError> {
-    let value = match get_field(ctx, fields, name) {
+    let value = match utils::get_map_field(ctx, fields, name) {
         Some(value) => value,
         None => return Ok(Vec::new()),
     };
@@ -728,19 +728,6 @@ fn strict_cell_to_string(
     }
 }
 
-fn get_field(
-    ctx: &mut PengNativeFunctionCallContext,
-    fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
-    name: &str,
-) -> Option<PengBindedCell> {
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
-
-    match fields.get(&name_ptr) {
-        Some(value) => Some(value.clone()),
-        None => None,
-    }
-}
-
 fn get_string_arg(
     ctx: &PengNativeFunctionCallContext,
     index: usize,
@@ -757,10 +744,4 @@ fn get_string_arg(
     };
 
     strict_cell_to_string(ctx, arg, function_name)
-}
-
-fn string_binded_cell_from_env(env: &mut PengEnv, value: String) -> PengBindedCell {
-    let ptr = env.create_heap_value(PengValue::Box(PengBox::String(value)));
-
-    PengBindedCell::Mutable(PengCell::Reference(ptr))
 }

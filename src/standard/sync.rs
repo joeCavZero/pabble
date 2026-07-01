@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use penguin::prelude::*;
 
+use crate::standard::utils;
+
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
@@ -923,7 +925,7 @@ fn get_bool_field(
     default_value: bool,
     function_name: &str,
 ) -> Result<bool, PengError> {
-    let cell = match get_field(ctx, object_ptr, name) {
+    let cell = match utils::get_object_field(ctx, object_ptr, name) {
         Ok(Some(cell)) => cell,
         Ok(None) => return Ok(default_value),
         Err(e) => return Err(e),
@@ -946,7 +948,7 @@ fn get_int_field(
     default_value: isize,
     function_name: &str,
 ) -> Result<isize, PengError> {
-    let cell = match get_field(ctx, object_ptr, name) {
+    let cell = match utils::get_object_field(ctx, object_ptr, name) {
         Ok(Some(cell)) => cell,
         Ok(None) => return Ok(default_value),
         Err(e) => return Err(e),
@@ -980,7 +982,7 @@ fn get_uint_field(
     default_value: usize,
     function_name: &str,
 ) -> Result<usize, PengError> {
-    let cell = match get_field(ctx, object_ptr, name) {
+    let cell = match utils::get_object_field(ctx, object_ptr, name) {
         Ok(Some(cell)) => cell,
         Ok(None) => return Ok(default_value),
         Err(e) => return Err(e),
@@ -1004,30 +1006,6 @@ fn get_uint_field(
             "sync:{}() field '{}' must be uint",
             function_name, name
         ))),
-    }
-}
-
-fn get_field(
-    ctx: &mut PengNativeFunctionCallContext,
-    object_ptr: PengHeapPtr,
-    name: &str,
-) -> Result<Option<PengBindedCell>, PengError> {
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
-
-    match ctx.env_mut().get_heap_mut(object_ptr) {
-        Some(PengValue::Box(PengBox::Object(object))) => {
-            match object.fields.get(&name_ptr) {
-                Some(value) => Ok(Some(value.clone())),
-                None => Ok(None),
-            }
-        }
-
-        Some(_) => Err(PengError::CannotCallValue(format!(
-            "sync object field access expected object for '{}'",
-            name
-        ))),
-
-        None => Err(PengError::HeapValueNotFound(object_ptr)),
     }
 }
 
@@ -1059,7 +1037,7 @@ fn get_channel_queue(
     channel_ptr: PengHeapPtr,
     function_name: &str,
 ) -> Result<Option<PengHeapPtr>, PengError> {
-    let cell = match get_field(ctx, channel_ptr, "values") {
+    let cell = match utils::get_object_field(ctx, channel_ptr, "values") {
         Ok(Some(cell)) => cell,
         Ok(None) => return Ok(None),
         Err(e) => return Err(e),
