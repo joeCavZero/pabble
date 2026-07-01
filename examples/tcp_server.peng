@@ -1,0 +1,32 @@
+import("tcp") as tcp
+import("io") as io
+
+func main() {
+    var config = tcp:Server:{
+        host = "127.0.0.1",
+        port = 8080
+    }
+
+    var server = config.listen()
+
+    io:println("Server listening on "..config.host..":"..(config.port as string))
+
+    while true {
+        io:println("Waiting for client...")
+
+        var conn = server.accept()
+
+        io:println("Client connected!")
+
+        var message = conn.read_line()
+
+        io:println("Received:")
+        io:println(message)
+
+        conn.write_line("Hello from Penguin TCP server!")
+
+        conn.close()
+
+        io:println("Client disconnected.")
+    }
+}

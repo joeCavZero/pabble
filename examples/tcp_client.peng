@@ -1,0 +1,21 @@
+import("tcp") as tcp
+import("io") as io
+
+func main() {
+    var client = tcp:Client:{
+        host = "127.0.0.1",
+        port = 8080,
+        timeout = 5000
+    }
+
+    var conn = client.connect()
+
+    conn.write_line("Hello server!")
+
+    var response = conn.read_line()
+
+    io:println("Server replied:")
+    io:println(response)
+
+    conn.close()
+}
