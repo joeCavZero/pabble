@@ -1,0 +1,40 @@
+import("io") as io
+import("threads") as threads
+import("sync") as sync
+
+func worker(name, mutex, counter, loops) {
+    for (var i = 0; i < loops; i += 1) {
+        while !mutex.lock() {
+            threads:yield()
+        }
+
+        counter.value += 1
+
+        mutex.unlock()
+    }
+
+    return name
+}
+
+func main() {
+    io:println("===== SYNC MUTEX TEST =====")
+
+    var mutex = sync:Mutex:{}
+    var counter = { value = 0 }
+
+    var t1 = threads:spawn(worker, "t1", mutex, counter, 1000)
+    var t2 = threads:spawn(worker, "t2", mutex, counter, 1000)
+    var t3 = threads:spawn(worker, "t3", mutex, counter, 1000)
+
+    while !t1.is_finished() || !t2.is_finished() || !t3.is_finished() {
+        threads:yield()
+    }
+
+    io:println("counter:")
+    io:println(counter.value)
+
+    io:println("results:")
+    io:println(t1.get())
+    io:println(t2.get())
+    io:println(t3.get())
+}

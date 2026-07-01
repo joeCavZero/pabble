@@ -1,0 +1,40 @@
+import("io") as io
+import("threads") as threads
+import("sync") as sync
+
+func initialize_once(name, once, state) {
+    if once.try_begin() {
+        io:println(name, "is initializing")
+        state.value = name
+        once.finish()
+    } else {
+        while !once.is_done() {
+            threads:yield()
+        }
+
+        io:println(name, "saw initialized state")
+    }
+
+    return name
+}
+
+func main() {
+    io:println("===== SYNC ONCE TEST =====")
+
+    var once = sync:Once:{}
+    var state = { value = "none" }
+
+    var t1 = threads:spawn(initialize_once, "t1", once, state)
+    var t2 = threads:spawn(initialize_once, "t2", once, state)
+    var t3 = threads:spawn(initialize_once, "t3", once, state)
+
+    while !t1.is_finished() || !t2.is_finished() || !t3.is_finished() {
+        threads:yield()
+    }
+
+    io:println("state:")
+    io:println(state.value)
+
+    io:println("done:")
+    io:println(once.is_done())
+}

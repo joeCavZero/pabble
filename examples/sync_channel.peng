@@ -1,0 +1,50 @@
+import("io") as io
+import("threads") as threads
+import("sync") as sync
+
+func producer(name, channel, count) {
+    for (var i = 0; i < count; i += 1) {
+        channel.send(name)
+        threads:yield()
+    }
+
+    return name
+}
+
+func main() {
+    io:println("===== SYNC CHANNEL TEST =====")
+
+    var channel = sync:Channel:{}
+
+    var t1 = threads:spawn(producer, "producer-a", channel, 3)
+    var t2 = threads:spawn(producer, "producer-b", channel, 3)
+
+    var received = 0
+
+    while received < 6 {
+        var value = channel.recv()
+
+        if value == nil {
+            threads:yield()
+        } else {
+            io:println("received:", value)
+            received += 1
+        }
+    }
+
+    while !t1.is_finished() || !t2.is_finished() {
+        threads:yield()
+    }
+
+    io:println("received count:")
+    io:println(received)
+
+    io:println("remaining channel len:")
+    io:println(channel.len())
+
+    io:println("producer results:")
+    io:println(t1.get())
+    io:println(t2.get())
+
+    io:println("done")
+}

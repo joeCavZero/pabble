@@ -27,6 +27,8 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
 
     registry.insert("time".to_string(), time::setup(peng));
 
+    registry.insert("sync".to_string(), sync::setup(peng));
+
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 

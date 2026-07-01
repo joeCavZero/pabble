@@ -1,0 +1,43 @@
+import("io") as io
+import("threads") as threads
+import("sync") as sync
+
+func worker(name, counter, done) {
+    for (var i = 0; i < 1000; i += 1) {
+        counter.add(1)
+    }
+
+    done.set(true)
+
+    return name
+}
+
+func main() {
+    io:println("===== SYNC ATOMIC TEST =====")
+
+    var counter = sync:AtomicInt:{
+        value = 0
+    }
+
+    var done1 = sync:AtomicBool:{ value = false }
+    var done2 = sync:AtomicBool:{ value = false }
+
+    var t1 = threads:spawn(worker, "t1", counter, done1)
+    var t2 = threads:spawn(worker, "t2", counter, done2)
+
+    while !done1.get() || !done2.get() {
+        threads:yield()
+    }
+
+    io:println("counter:")
+    io:println(counter.get())
+
+    io:println("swap old:")
+    io:println(counter.swap(10))
+
+    io:println("counter now:")
+    io:println(counter.get())
+
+    io:println(t1.get())
+    io:println(t2.get())
+}
