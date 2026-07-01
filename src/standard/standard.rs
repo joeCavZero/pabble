@@ -23,6 +23,8 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
 
     registry.insert("http".to_string(), http::setup(peng));
 
+    registry.insert("os".to_string(), os::setup(peng));
+
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 

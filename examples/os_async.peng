@@ -1,0 +1,67 @@
+import("io") as io
+import("os") as os
+import("threads") as threads
+
+func main() {
+    io:println("===== OS ASYNC PROCESS TEST =====")
+
+    var process = os:Process:{
+        program = "sleep",
+        args = ["2"],
+        cwd = nil,
+        env = {},
+        stdin = nil
+    }
+
+    var task = process.spawn()
+
+    while !task.is_finished() {
+        io:println("waiting process...")
+        threads:yield()
+    }
+
+    var err = task.error()
+
+    if err != nil {
+        io:println("process failed:")
+        io:println(err)
+        return nil
+    }
+
+    var result = task.get()
+
+    io:println("process finished")
+    io:println("exit code:")
+    io:println(result.exit_code)
+
+    io:println("success:")
+    io:println(result.success)
+
+    io:println("stdout:")
+    io:println(result.stdout)
+
+    io:println("stderr:")
+    io:println(result.stderr)
+
+    io:println("module spawn test:")
+
+    var process2 = os:Process:{
+        program = "echo",
+        args = ["hello async"],
+        cwd = nil,
+        env = {},
+        stdin = nil
+    }
+
+    var task2 = os:spawn(process2)
+
+    while !task2.is_finished() {
+        threads:yield()
+    }
+
+    var result2 = task2.get()
+
+    io:println(result2.exit_code)
+    io:println(result2.success)
+    io:println(result2.stdout)
+}

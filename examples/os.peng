@@ -1,0 +1,82 @@
+import("io") as io
+import("os") as os
+
+func main() {
+    io:println("===== OS MODULE TEST =====")
+
+    io:println("name:")
+    io:println(os:name())
+
+    io:println("family:")
+    io:println(os:family())
+
+    io:println("arch:")
+    io:println(os:arch())
+
+    io:println("current dir:")
+    io:println(os:current_dir())
+
+    io:println("home dir:")
+    io:println(os:home_dir())
+
+    io:println("temp dir:")
+    io:println(os:temp_dir())
+
+    io:println("pid:")
+    io:println(os:pid())
+
+    io:println("cpu count:")
+    io:println(os:cpu_count())
+
+    io:println("args:")
+    var args = os:args()
+    for (var i = 0; i < args.len(); i += 1) {
+        io:println(i, args[i])
+    }
+
+    io:println("env test:")
+    os:set_env("PENGUIN_OS_TEST", "hello from penguin")
+    io:println(os:get_env("PENGUIN_OS_TEST"))
+    os:remove_env("PENGUIN_OS_TEST")
+    io:println(os:get_env("PENGUIN_OS_TEST"))
+
+    io:println("run echo:")
+
+    var process = os:Process:{
+        program = "echo",
+        args = ["hello from os:Process"],
+        cwd = nil,
+        env = {},
+        stdin = nil
+    }
+
+    var result = process.run()
+
+    io:println("exit code:")
+    io:println(result.exit_code)
+
+    io:println("success:")
+    io:println(result.success)
+
+    io:println("stdout:")
+    io:println(result.stdout)
+
+    io:println("stderr:")
+    io:println(result.stderr)
+
+    io:println("run with module function:")
+
+    var process2 = os:Process:{
+        program = "echo",
+        args = ["hello from os:run"],
+        cwd = nil,
+        env = {},
+        stdin = nil
+    }
+
+    var result2 = os:run(process2)
+
+    io:println(result2.exit_code)
+    io:println(result2.success)
+    io:println(result2.stdout)
+}

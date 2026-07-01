@@ -1,4 +1,5 @@
 pub mod standard;
+pub mod utils;
 pub mod import;
 pub mod io;
 pub mod operations;
@@ -9,4 +10,4 @@ pub mod convert;
 pub mod fs;
 pub mod math;
 pub mod http;
-pub mod utils;
+pub mod os;
