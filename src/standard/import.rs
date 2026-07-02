@@ -59,7 +59,10 @@ pub fn setup(
         }
 
         let is_local_import =
-            path.starts_with("./") || path.starts_with("../") || path.ends_with(".peng");
+            path.starts_with("./")
+                || path.starts_with("../")
+                || path.ends_with(".peng")
+                || path.ends_with(".penb");
 
         if !is_local_import {
             return Err(PengError::CannotCallValue(format!(
@@ -123,15 +126,28 @@ pub fn setup(
 
         let prelude = prelude_for_import_ref.borrow().clone();
 
-        let imported_unit = match ctx.env_mut().load_program_from_file_using(
-            &canonical_path_string,
-            &prelude,
-            0,
-        ) {
-            Ok(unit) => unit,
+        let imported_unit = if path.ends_with(".penb") {
+            match ctx.env_mut().load_program_from_binary_file_using(
+                &canonical_path_string,
+                &prelude,
+            ) {
+                Ok(unit) => unit,
 
-            Err(e) => {
-                return Err(e);
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+        } else {
+            match ctx.env_mut().load_program_from_file_using(
+                &canonical_path_string,
+                &prelude,
+                0,
+            ) {
+                Ok(unit) => unit,
+
+                Err(e) => {
+                    return Err(e);
+                }
             }
         };
 
