@@ -13,7 +13,7 @@ use crate::project::*;
 use crate::standard::standard::*;
 
 #[derive(Clone)]
-pub enum PebbleImportCacheEntry {
+pub enum PabbleImportCacheEntry {
     Loading {
         unit: PengUnit,
         modified: Option<SystemTime>,
@@ -25,14 +25,14 @@ pub enum PebbleImportCacheEntry {
     },
 }
 
-pub type PebbleImportCache = Rc<RefCell<HashMap<PathBuf, PebbleImportCacheEntry>>>;
+pub type PabbleImportCache = Rc<RefCell<HashMap<PathBuf, PabbleImportCacheEntry>>>;
 
 pub fn setup(
     peng: &mut PengEnv,
     unit: &mut PengUnit,
-    std_registry: PebbleStandardRegistry,
-    import_cache: PebbleImportCache,
-    dependencies: HashMap<String, PebbleDependency>,
+    std_registry: PabbleStandardRegistry,
+    import_cache: PabbleImportCache,
+    dependencies: HashMap<String, PabbleDependency>,
 ) -> Result<(), PengError> {
     let prelude_for_import = Rc::new(RefCell::new(unit.clone()));
     let prelude_for_import_ref = prelude_for_import.clone();
@@ -108,12 +108,12 @@ pub fn setup(
 
 fn resolve_dependency_entry(
     name: &str,
-    dependency: &PebbleDependency,
+    dependency: &PabbleDependency,
 ) -> Result<PathBuf, String> {
     match dependency {
-        PebbleDependency::Version(version) => resolve_version_dependency_entry(name, version),
+        PabbleDependency::Version(version) => resolve_version_dependency_entry(name, version),
 
-        PebbleDependency::Detailed(info) => {
+        PabbleDependency::Detailed(info) => {
             if let Some(path) = &info.path {
                 return resolve_path_dependency_entry(name, path);
             }
@@ -152,7 +152,7 @@ fn resolve_path_dependency_entry(name: &str, path: &str) -> Result<PathBuf, Stri
 }
 
 fn resolve_version_dependency_entry(name: &str, version: &str) -> Result<PathBuf, String> {
-    let cache_dir = match pebble_dependency_cache_dir() {
+    let cache_dir = match pabble_dependency_cache_dir() {
         Ok(cache_dir) => cache_dir,
         Err(e) => return Err(e),
     };
@@ -183,7 +183,7 @@ fn resolve_git_dependency_entry(
     git: &str,
     version: Option<&String>,
 ) -> Result<PathBuf, String> {
-    let cache_dir = match pebble_dependency_cache_dir() {
+    let cache_dir = match pabble_dependency_cache_dir() {
         Ok(cache_dir) => cache_dir,
         Err(e) => return Err(e),
     };
@@ -235,7 +235,7 @@ fn resolve_git_dependency_entry(
 }
 
 fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf, String> {
-    let project_file = root.join("pebble.toml");
+    let project_file = root.join("pabble.toml");
 
     if project_file.exists() {
         let project = match load_project_from_path(&project_file) {
@@ -275,12 +275,12 @@ fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf
     }
 
     Err(format!(
-        "dependency '{}' does not contain pebble.toml, src/main.peng or main.penb",
+        "dependency '{}' does not contain pabble.toml, src/main.peng or main.penb",
         name
     ))
 }
 
-fn pebble_dependency_cache_dir() -> Result<PathBuf, String> {
+fn pabble_dependency_cache_dir() -> Result<PathBuf, String> {
     let current_dir = match std::env::current_dir() {
         Ok(current_dir) => current_dir,
 
@@ -292,7 +292,7 @@ fn pebble_dependency_cache_dir() -> Result<PathBuf, String> {
         }
     };
 
-    Ok(current_dir.join(".pebble").join("deps"))
+    Ok(current_dir.join(".pabble").join("deps"))
 }
 
 fn sanitize_dependency_segment(value: &str) -> String {
@@ -414,7 +414,7 @@ fn import_local_module(
     ctx: &mut PengNativeFunctionCallContext,
     path: &PathBuf,
     prelude_for_import_ref: &Rc<RefCell<PengUnit>>,
-    import_cache: &PebbleImportCache,
+    import_cache: &PabbleImportCache,
 ) -> Result<PengBindedCell, PengError> {
     let canonical_path = match fs::canonicalize(path) {
         Ok(path) => path,
@@ -440,7 +440,7 @@ fn import_local_module(
         let cache = import_cache.borrow();
 
         match cache.get(&canonical_path) {
-            Some(PebbleImportCacheEntry::Loaded {
+            Some(PabbleImportCacheEntry::Loaded {
                 unit,
                 modified: cached_modified,
             }) => {
@@ -451,7 +451,7 @@ fn import_local_module(
                 }
             }
 
-            Some(PebbleImportCacheEntry::Loading { unit, .. }) => Some(unit.clone()),
+            Some(PabbleImportCacheEntry::Loading { unit, .. }) => Some(unit.clone()),
 
             None => None,
         }
@@ -520,7 +520,7 @@ fn import_local_module(
 
         cache.insert(
             canonical_path.clone(),
-            PebbleImportCacheEntry::Loading {
+            PabbleImportCacheEntry::Loading {
                 unit: imported_unit.clone(),
                 modified,
             },
@@ -544,7 +544,7 @@ fn import_local_module(
 
         cache.insert(
             canonical_path.clone(),
-            PebbleImportCacheEntry::Loaded {
+            PabbleImportCacheEntry::Loaded {
                 unit: imported_unit.clone(),
                 modified,
             },

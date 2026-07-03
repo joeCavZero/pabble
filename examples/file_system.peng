@@ -7,7 +7,7 @@ func main() {
     var original_dir = fs:current_dir()
     io:println("current dir:", original_dir)
 
-    var base = fs:join(original_dir, "pebble_fs_demo")
+    var base = fs:join(original_dir, "pabble_fs_demo")
     var nested = fs:join(base, "nested")
     var file = fs:join(base, "hello.txt")
     var copy_file = fs:join(base, "copy.txt")

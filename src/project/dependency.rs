@@ -2,13 +2,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum PebbleDependency {
+pub enum PabbleDependency {
     Version(String),
-    Detailed(PebbleDependencyInfo),
+    Detailed(PabbleDependencyInfo),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PebbleDependencyInfo {
+pub struct PabbleDependencyInfo {
     pub version: Option<String>,
     pub path: Option<String>,
     pub git: Option<String>,

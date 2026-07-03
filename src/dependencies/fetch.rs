@@ -1,7 +1,7 @@
 use crate::dependencies::utils::*;
 
 pub fn fetch() {
-    match install_project_dependencies(PebbleDependencyCommandMode::Fetch) {
+    match install_project_dependencies(PabbleDependencyCommandMode::Fetch) {
         Ok(()) => {}
 
         Err(e) => {

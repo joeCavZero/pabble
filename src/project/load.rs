@@ -1,11 +1,11 @@
 use std::fs;
 use std::path::Path;
 
-use crate::project::config::PebbleProjectFile;
+use crate::project::config::PabbleProjectFile;
 
-pub const PEBBLE_PROJECT_FILE: &str = "pebble.toml";
+pub const PEBBLE_PROJECT_FILE: &str = "pabble.toml";
 
-pub fn load_project_from_current_dir() -> Result<Option<PebbleProjectFile>, String> {
+pub fn load_project_from_current_dir() -> Result<Option<PabbleProjectFile>, String> {
     let path = Path::new(PEBBLE_PROJECT_FILE);
 
     if !path.exists() {
@@ -18,7 +18,7 @@ pub fn load_project_from_current_dir() -> Result<Option<PebbleProjectFile>, Stri
     }
 }
 
-pub fn load_project_from_path(path: &Path) -> Result<PebbleProjectFile, String> {
+pub fn load_project_from_path(path: &Path) -> Result<PabbleProjectFile, String> {
     let content = match fs::read_to_string(path) {
         Ok(content) => content,
 
@@ -31,7 +31,7 @@ pub fn load_project_from_path(path: &Path) -> Result<PebbleProjectFile, String> 
         }
     };
 
-    match toml::from_str::<PebbleProjectFile>(&content) {
+    match toml::from_str::<PabbleProjectFile>(&content) {
         Ok(project) => Ok(project),
 
         Err(e) => Err(format!(
@@ -55,7 +55,7 @@ pub fn resolve_entry(entry: Option<&String>, default_entry: &str) -> Result<Stri
             match project {
                 Some(project) => {
                     if project.project.entry.trim().is_empty() {
-                        return Err("pebble.toml has empty project.entry".to_string());
+                        return Err("pabble.toml has empty project.entry".to_string());
                     }
 
                     Ok(project.project.entry)

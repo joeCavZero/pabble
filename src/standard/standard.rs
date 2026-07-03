@@ -4,9 +4,9 @@ use crate::standard::{custom_access::register_custom_accesses, *};
 
 use std::collections::HashMap;
 
-pub type PebbleStandardRegistry = HashMap<String, PengUnit>;
+pub type PabbleStandardRegistry = HashMap<String, PengUnit>;
 
-pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRegistry, PengError> {
+pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PabbleStandardRegistry, PengError> {
     let mut registry = HashMap::new();
 
     registry.insert("io".to_string(), io::setup(peng));

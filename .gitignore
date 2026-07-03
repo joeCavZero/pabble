@@ -1,8 +1,8 @@
 /target
 
-pebble.toml
+pabble.toml
 
 /*.peng
 /*.penb
-.pebble
+.pabble
 /notes

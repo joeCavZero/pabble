@@ -49,5 +49,5 @@ pub fn new(name: &str) {
         }
     }
 
-    println!("Created Pebble project '{name}'");
+    println!("Created Pabble project '{name}'");
 }

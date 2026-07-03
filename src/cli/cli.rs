@@ -4,7 +4,7 @@ use crate::execute::*;
 use crate::compile::*;
 
 #[derive(Debug)]
-pub enum PebbleCLI {
+pub enum PabbleCLI {
     Run {
         entry: Option<String>,
     },
@@ -23,38 +23,38 @@ pub enum PebbleCLI {
     Help,
 }
 
-impl PebbleCLI {
+impl PabbleCLI {
     pub fn new(os_args: Vec<String>) -> Self {
         let mut args = os_args.into_iter();
 
         args.next();
 
         match args.next().as_deref() {
-            Some("run") => PebbleCLI::Run { entry: args.next() },
+            Some("run") => PabbleCLI::Run { entry: args.next() },
 
-            Some("compile") => PebbleCLI::Compile {
+            Some("compile") => PabbleCLI::Compile {
                 entry: args.next(),
                 output: args.next(),
             },
 
-            Some("fetch") => PebbleCLI::Fetch,
+            Some("fetch") => PabbleCLI::Fetch,
 
-            Some("install") => PebbleCLI::Install,
+            Some("install") => PabbleCLI::Install,
 
-            Some("update") => PebbleCLI::Update,
+            Some("update") => PabbleCLI::Update,
 
-            Some("init") => PebbleCLI::Init,
+            Some("init") => PabbleCLI::Init,
 
             Some("new") => match args.next() {
-                Some(name) => PebbleCLI::New { name },
-                None => PebbleCLI::Help,
+                Some(name) => PabbleCLI::New { name },
+                None => PabbleCLI::Help,
             },
 
-            Some("version") | Some("-v") | Some("--version") => PebbleCLI::Version,
+            Some("version") | Some("-v") | Some("--version") => PabbleCLI::Version,
 
-            Some("help") | Some("-h") | Some("--help") => PebbleCLI::Help,
+            Some("help") | Some("-h") | Some("--help") => PabbleCLI::Help,
 
-            Some(_) | None => PebbleCLI::Help,
+            Some(_) | None => PabbleCLI::Help,
         }
     }
 
@@ -100,16 +100,16 @@ impl PebbleCLI {
 }
 
 fn print_version() {
-    println!("Pebble {}", env!("CARGO_PKG_VERSION"));
+    println!("Pabble {}", env!("CARGO_PKG_VERSION"));
 }
 
 fn print_help() {
     println!(
         "\
-Pebble - Penguin Package Manager
+Pabble - Penguin Package Manager
 
 USAGE:
-    pebble <COMMAND>
+    pabble <COMMAND>
 
 COMMANDS:
     new <name>                    Create a new project
@@ -122,7 +122,7 @@ COMMANDS:
     fetch                         Fetch missing dependencies
     install                       Install dependencies
     update                        Update dependencies
-    version                       Show Pebble version
+    version                       Show Pabble version
     help                          Show this help
 "
     );

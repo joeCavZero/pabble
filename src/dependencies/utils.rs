@@ -7,18 +7,18 @@ use std::{
 use crate::project::*;
 
 #[derive(Debug, Clone, Copy)]
-pub enum PebbleDependencyCommandMode {
+pub enum PabbleDependencyCommandMode {
     Fetch,
     Install,
     Update,
 }
 
-pub fn install_project_dependencies(mode: PebbleDependencyCommandMode) -> Result<(), String> {
+pub fn install_project_dependencies(mode: PabbleDependencyCommandMode) -> Result<(), String> {
     let project = match load_project_from_current_dir() {
         Ok(Some(project)) => project,
 
         Ok(None) => {
-            return Err("No pebble.toml found in current directory".to_string());
+            return Err("No pabble.toml found in current directory".to_string());
         }
 
         Err(e) => {
@@ -56,15 +56,15 @@ pub fn install_project_dependencies(mode: PebbleDependencyCommandMode) -> Result
     }
 
     match mode {
-        PebbleDependencyCommandMode::Fetch => {
+        PabbleDependencyCommandMode::Fetch => {
             println!("Dependencies fetched");
         }
 
-        PebbleDependencyCommandMode::Install => {
+        PabbleDependencyCommandMode::Install => {
             println!("Dependencies installed");
         }
 
-        PebbleDependencyCommandMode::Update => {
+        PabbleDependencyCommandMode::Update => {
             println!("Dependencies updated");
         }
     }
@@ -74,15 +74,15 @@ pub fn install_project_dependencies(mode: PebbleDependencyCommandMode) -> Result
 
 fn install_dependency(
     name: &str,
-    dependency: &PebbleDependency,
-    mode: PebbleDependencyCommandMode,
+    dependency: &PabbleDependency,
+    mode: PabbleDependencyCommandMode,
 ) -> Result<PathBuf, String> {
     match dependency {
-        PebbleDependency::Version(version) => {
+        PabbleDependency::Version(version) => {
             install_version_dependency(name, version, mode)
         }
 
-        PebbleDependency::Detailed(info) => {
+        PabbleDependency::Detailed(info) => {
             if let Some(path) = &info.path {
                 return install_path_dependency(name, path);
             }
@@ -123,9 +123,9 @@ fn install_path_dependency(name: &str, path: &str) -> Result<PathBuf, String> {
 fn install_version_dependency(
     name: &str,
     version: &str,
-    mode: PebbleDependencyCommandMode,
+    mode: PabbleDependencyCommandMode,
 ) -> Result<PathBuf, String> {
-    let cache_dir = match pebble_dependency_cache_dir() {
+    let cache_dir = match pabble_dependency_cache_dir() {
         Ok(cache_dir) => cache_dir,
         Err(e) => return Err(e),
     };
@@ -135,13 +135,13 @@ fn install_version_dependency(
         .join(sanitize_dependency_segment(name))
         .join(sanitize_dependency_segment(version));
 
-    let should_update = matches!(mode, PebbleDependencyCommandMode::Update);
+    let should_update = matches!(mode, PabbleDependencyCommandMode::Update);
 
     if dependency_root.exists() && !should_update {
         return resolve_project_entry_from_root(name, &dependency_root);
     }
 
-    let registry_root = match pebble_registry_root() {
+    let registry_root = match pabble_registry_root() {
         Ok(registry_root) => registry_root,
         Err(e) => return Err(e),
     };
@@ -190,9 +190,9 @@ fn install_git_dependency(
     name: &str,
     git: &str,
     version: Option<&String>,
-    mode: PebbleDependencyCommandMode,
+    mode: PabbleDependencyCommandMode,
 ) -> Result<PathBuf, String> {
-    let cache_dir = match pebble_dependency_cache_dir() {
+    let cache_dir = match pabble_dependency_cache_dir() {
         Ok(cache_dir) => cache_dir,
         Err(e) => return Err(e),
     };
@@ -201,7 +201,7 @@ fn install_git_dependency(
         .join("git")
         .join(sanitize_dependency_segment(name));
 
-    let should_update = matches!(mode, PebbleDependencyCommandMode::Update);
+    let should_update = matches!(mode, PabbleDependencyCommandMode::Update);
 
     if dependency_root.exists() {
         if should_update {
@@ -248,7 +248,7 @@ fn install_git_dependency(
 }
 
 fn create_dependency_cache_dirs() -> Result<(), String> {
-    let cache_dir = match pebble_dependency_cache_dir() {
+    let cache_dir = match pabble_dependency_cache_dir() {
         Ok(cache_dir) => cache_dir,
         Err(e) => return Err(e),
     };
@@ -278,7 +278,7 @@ fn create_dependency_cache_dirs() -> Result<(), String> {
     Ok(())
 }
 
-fn pebble_dependency_cache_dir() -> Result<PathBuf, String> {
+fn pabble_dependency_cache_dir() -> Result<PathBuf, String> {
     let current_dir = match std::env::current_dir() {
         Ok(current_dir) => current_dir,
 
@@ -290,10 +290,10 @@ fn pebble_dependency_cache_dir() -> Result<PathBuf, String> {
         }
     };
 
-    Ok(current_dir.join(".pebble").join("deps"))
+    Ok(current_dir.join(".pabble").join("deps"))
 }
 
-fn pebble_registry_root() -> Result<PathBuf, String> {
+fn pabble_registry_root() -> Result<PathBuf, String> {
     match std::env::var("PEBBLE_REGISTRY_PATH") {
         Ok(path) => {
             let path_buf = PathBuf::from(path);
@@ -322,19 +322,19 @@ fn pebble_registry_root() -> Result<PathBuf, String> {
         }
     };
 
-    let local_registry = current_dir.join(".pebble").join("registry");
+    let local_registry = current_dir.join(".pabble").join("registry");
 
     if local_registry.exists() {
         return Ok(local_registry);
     }
 
     Err(
-        "No registry found. Set PEBBLE_REGISTRY_PATH or create .pebble/registry".to_string(),
+        "No registry found. Set PEBBLE_REGISTRY_PATH or create .pabble/registry".to_string(),
     )
 }
 
 fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf, String> {
-    let project_file = root.join("pebble.toml");
+    let project_file = root.join("pabble.toml");
 
     if project_file.exists() {
         let project = match load_project_from_path(&project_file) {
@@ -374,7 +374,7 @@ fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf
     }
 
     Err(format!(
-        "dependency '{}' does not contain pebble.toml, src/main.peng or main.penb",
+        "dependency '{}' does not contain pabble.toml, src/main.peng or main.penb",
         name
     ))
 }

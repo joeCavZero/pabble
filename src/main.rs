@@ -1,6 +1,6 @@
-use pebble::cli::PebbleCLI;
+use pabble::cli::PabbleCLI;
 
 fn main() {
-    let cli = PebbleCLI::new(std::env::args().collect());
+    let cli = PabbleCLI::new(std::env::args().collect());
     cli.run();
 }
