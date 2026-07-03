@@ -1,4 +1,7 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fs;
+use std::rc::Rc;
 
 use crate::project::*;
 use crate::standard::*;
@@ -17,11 +20,40 @@ pub fn execute_from_entry(entry: Option<&String>) {
     let mut peng = PengEnv::new();
     let mut core = PengUnit::library();
 
-    match standard::setup(&mut peng, &mut core) {
-        Ok(_) => {}
+    let std_registry = match standard::setup(&mut peng, &mut core) {
+        Ok(std_registry) => std_registry,
 
         Err(e) => {
             println!("{:#?}", e);
+            return;
+        }
+    };
+
+    let dependencies = match load_project_from_current_dir() {
+        Ok(Some(project)) => project.dependencies,
+
+        Ok(None) => HashMap::new(),
+
+        Err(e) => {
+            eprintln!("{e}");
+            return;
+        }
+    };
+
+    let import_cache = Rc::new(RefCell::new(HashMap::new()));
+
+    match crate::standard::import::setup(
+        &mut peng,
+        &mut core,
+        std_registry,
+        import_cache,
+        dependencies,
+    ) {
+        Ok(()) => {}
+
+        Err(e) => {
+            eprintln!("Failed to setup import:");
+            eprintln!("{e:#?}");
             return;
         }
     }

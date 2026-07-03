@@ -1,10 +1,8 @@
 use penguin::prelude::*;
+
 use crate::standard::{custom_access::register_custom_accesses, *};
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-};
+
+use std::collections::HashMap;
 
 pub type PebbleStandardRegistry = HashMap<String, PengUnit>;
 
@@ -18,7 +16,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
     registry.insert("random".to_string(), random::setup(peng));
 
     registry.insert("convert".to_string(), convert::setup(peng));
-    
+
     registry.insert("fs".to_string(), fs::setup(peng));
 
     registry.insert("http".to_string(), http::setup(peng));
@@ -39,18 +37,15 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PebbleStandardRe
 
     registry.insert("ffi".to_string(), ffi::setup(peng));
 
-    let import_cache = Rc::new(RefCell::new(HashMap::new()));
+    match unit.register_immutable_native_operation(peng, "impls", operations::implements) {
+        Ok(_) => {}
 
-    unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();
+        Err(e) => {
+            return Err(e);
+        }
+    }
 
     register_custom_accesses(peng, unit);
-
-    import::setup(
-        peng,
-        unit,
-        registry.clone(),
-        import_cache,
-    ).unwrap();
 
     Ok(registry)
 }

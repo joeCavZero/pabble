@@ -6,7 +6,7 @@ use std::rc::Rc;
 use penguin::prelude::*;
 
 use crate::project::*;
-use crate::standard::standard;
+use crate::standard;
 
 pub fn compile(entry: &Option<String>, output: &Option<String>) {
     let input = match resolve_entry(entry.as_ref(), "main.peng") {
@@ -33,7 +33,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
     let mut peng = PengEnv::new();
     let mut using_unit = PengUnit::library();
 
-    let std_registry = match standard::setup(&mut peng, &mut using_unit) {
+    let std_registry = match standard::standard::setup(&mut peng, &mut using_unit) {
         Ok(std_registry) => std_registry,
 
         Err(e) => {
@@ -43,9 +43,26 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
         }
     };
 
+        let dependencies = match load_project_from_current_dir() {
+        Ok(Some(project)) => project.dependencies,
+
+        Ok(None) => HashMap::new(),
+
+        Err(e) => {
+            eprintln!("{e}");
+            return;
+        }
+    };
+
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
-    match crate::standard::import::setup(&mut peng, &mut using_unit, std_registry, import_cache) {
+        match standard::import::setup(
+        &mut peng,
+        &mut using_unit,
+        std_registry,
+        import_cache,
+        dependencies,
+    ) {
         Ok(()) => {}
 
         Err(e) => {
