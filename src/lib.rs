@@ -4,3 +4,4 @@ pub mod execute;
 pub mod compile;
 pub mod initialize;
 pub mod project;
+pub mod dependencies;

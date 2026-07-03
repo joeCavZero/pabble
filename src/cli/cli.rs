@@ -1,3 +1,4 @@
+use crate::dependencies;
 use crate::initialize;
 use crate::execute::*;
 use crate::compile::*;
@@ -11,6 +12,9 @@ pub enum PebbleCLI {
         entry: Option<String>,
         output: Option<String>,
     },
+    Fetch,
+    Install,
+    Update,
     Init,
     New {
         name: String,
@@ -32,6 +36,12 @@ impl PebbleCLI {
                 entry: args.next(),
                 output: args.next(),
             },
+
+            Some("fetch") => PebbleCLI::Fetch,
+
+            Some("install") => PebbleCLI::Install,
+
+            Some("update") => PebbleCLI::Update,
 
             Some("init") => PebbleCLI::Init,
 
@@ -56,6 +66,18 @@ impl PebbleCLI {
 
             Self::Compile { entry, output } => {
                 compile(entry, output);
+            }
+
+            Self::Fetch => {
+                dependencies::fetch();
+            }
+
+            Self::Install => {
+                dependencies::install();
+            }
+
+            Self::Update => {
+                dependencies::update();
             }
 
             Self::Init => {
@@ -97,6 +119,9 @@ COMMANDS:
     compile                       Compile the current project
     compile <file>                Compile a specific source file to .penb
     compile <file> <output>       Compile a specific source file to a custom output
+    fetch                         Fetch missing dependencies
+    install                       Install dependencies
+    update                        Update dependencies
     version                       Show Pebble version
     help                          Show this help
 "
