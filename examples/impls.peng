@@ -1,0 +1,45 @@
+import("io") as io
+
+union number = int|uint|f32|f64
+
+type Person {
+    var name: string
+    var age: int
+
+    func greet(self: Person) -> string {
+        return "hello, "..self.name
+    }
+}
+
+func print_check(name: string, result: bool) {
+    io:println(name..": "..(result as type string))
+}
+
+func main() {
+    var i: int = 10
+    var u: uint = 20
+    var s: string = "penguin"
+    var values: [any] = [i, u, s]
+
+    var p: Person = Person:{
+        name = "Joe",
+        age = 21
+    }
+
+    print_check("i impls int", i impls type int)
+    print_check("i impls number", i impls number)
+    print_check("u impls number", u impls number)
+    print_check("s impls string", s impls type string)
+    print_check("s impls number", s impls number)
+
+    print_check("values impls [any]", values impls type [any])
+    print_check("values impls [int]", values impls type [int])
+
+    print_check("p impls Person", p impls type Person)
+    print_check("p.name impls string", p.name impls type string)
+    print_check("p.greet() impls string", p.greet() impls type string)
+
+    print_check("type int impls type", type int impls type type)
+    print_check("type [any] impls type", type [any] impls type type)
+    print_check("type number impls type", type number impls type type)
+}

@@ -37,13 +37,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PabbleStandardRe
 
     registry.insert("ffi".to_string(), ffi::setup(peng));
 
-    match unit.register_immutable_native_operation(peng, "impls", operations::implements) {
-        Ok(_) => {}
-
-        Err(e) => {
-            return Err(e);
-        }
-    }
+    unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();
 
     register_custom_accesses(peng, unit);
 
