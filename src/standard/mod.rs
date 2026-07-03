@@ -17,3 +17,4 @@ pub mod tcp;
 pub mod udp;
 pub mod net;
 pub mod ffi;
+pub mod crypto;

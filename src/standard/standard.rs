@@ -36,6 +36,8 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PabbleStandardRe
     registry.insert("net".to_string(), net::setup(peng));
 
     registry.insert("ffi".to_string(), ffi::setup(peng));
+    
+    registry.insert("crypto".to_string(), crypto::setup(peng));
 
     unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();
 

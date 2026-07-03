@@ -1,0 +1,35 @@
+import("io") as io
+import("crypto") as crypto
+
+func main() {
+    io:println("sha256:")
+    io:println(crypto:sha256("hello"))
+
+    io:println("hmac sha256:")
+    var sign = crypto:hmac_sha256("secret", "hello")
+    io:println(sign)
+
+    io:println("verify:")
+    io:println(crypto:verify_hmac_sha256("secret", "hello", sign))
+
+    io:println("base64:")
+    var encoded = crypto:base64_encode("hello")
+    io:println(encoded)
+    io:println(crypto:base64_decode_string(encoded))
+
+    io:println("hex:")
+    var hex = crypto:hex_encode("hello")
+    io:println(hex)
+    io:println(crypto:hex_decode_string(hex))
+
+    io:println("random:")
+    io:println(crypto:random_hex(16))
+    io:println(crypto:random_base64(16))
+
+    io:println("uuid:")
+    io:println(crypto:uuid_v4())
+
+    io:println("constant-time equals:")
+    io:println(crypto:equals("abc", "abc"))
+    io:println(crypto:equals("abc", "abd"))
+}
