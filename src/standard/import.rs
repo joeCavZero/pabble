@@ -2,6 +2,7 @@ use penguin::prelude::*;
 use std::{
     cell::RefCell,
     collections::HashMap,
+    fs,
     path::PathBuf,
     rc::Rc,
     time::SystemTime,
@@ -46,9 +47,7 @@ pub fn setup(
             },
 
             None => {
-                return Err(PengError::CannotCallValue(
-                    "import() expected path".into(),
-                ));
+                return Err(PengError::CannotCallValue("import() expected path".into()));
             }
         };
 
@@ -58,11 +57,10 @@ pub fn setup(
             return Ok(PengBinded::Immutable(PengCell::Reference(module_ptr)));
         }
 
-        let is_local_import =
-            path.starts_with("./")
-                || path.starts_with("../")
-                || path.ends_with(".peng")
-                || path.ends_with(".penb");
+        let is_local_import = path.starts_with("./")
+            || path.starts_with("../")
+            || path.ends_with(".peng")
+            || path.ends_with(".penb");
 
         if !is_local_import {
             return Err(PengError::CannotCallValue(format!(
@@ -73,7 +71,7 @@ pub fn setup(
 
         let path_buf = PathBuf::from(&path);
 
-        let canonical_path = match std::fs::canonicalize(&path_buf) {
+        let canonical_path = match fs::canonicalize(&path_buf) {
             Ok(path) => path,
 
             Err(_) => {
@@ -84,7 +82,7 @@ pub fn setup(
             }
         };
 
-        let modified = match std::fs::metadata(&canonical_path) {
+        let modified = match fs::metadata(&canonical_path) {
             Ok(metadata) => match metadata.modified() {
                 Ok(time) => Some(time),
                 Err(_) => None,
@@ -108,9 +106,7 @@ pub fn setup(
                     }
                 }
 
-                Some(PebbleImportCacheEntry::Loading { unit, .. }) => {
-                    Some(unit.clone())
-                }
+                Some(PebbleImportCacheEntry::Loading { unit, .. }) => Some(unit.clone()),
 
                 None => None,
             }
@@ -122,15 +118,21 @@ pub fn setup(
             return Ok(PengBinded::Immutable(PengCell::Reference(module_ptr)));
         }
 
-        let canonical_path_string = canonical_path.to_string_lossy().to_string();
-
         let prelude = prelude_for_import_ref.borrow().clone();
 
         let imported_unit = if path.ends_with(".penb") {
-            match ctx.env_mut().load_program_from_binary_file_using(
-                &canonical_path_string,
-                &prelude,
-            ) {
+            let bytes = match fs::read(&canonical_path) {
+                Ok(bytes) => bytes,
+
+                Err(e) => {
+                    return Err(PengError::CannotCallValue(format!(
+                        "failed to read binary module '{}': {}",
+                        path, e
+                    )));
+                }
+            };
+
+            match ctx.env_mut().load_program_from_binary_using(&bytes, &prelude) {
                 Ok(unit) => unit,
 
                 Err(e) => {
@@ -138,11 +140,18 @@ pub fn setup(
                 }
             }
         } else {
-            match ctx.env_mut().load_program_from_file_using(
-                &canonical_path_string,
-                &prelude,
-                0,
-            ) {
+            let source = match fs::read_to_string(&canonical_path) {
+                Ok(source) => source,
+
+                Err(e) => {
+                    return Err(PengError::CannotCallValue(format!(
+                        "failed to read source module '{}': {}",
+                        path, e
+                    )));
+                }
+            };
+
+            match ctx.env_mut().load_program_from_source_using(&source, &prelude, 0) {
                 Ok(unit) => unit,
 
                 Err(e) => {

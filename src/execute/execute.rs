@@ -1,5 +1,7 @@
-use crate::standard::*;
+use std::fs;
+
 use crate::project::*;
+use crate::standard::*;
 use penguin::prelude::*;
 
 pub fn execute_from_entry(entry: Option<&String>) {
@@ -25,7 +27,17 @@ pub fn execute_from_entry(entry: Option<&String>) {
     }
 
     let unit = if root.ends_with(".penb") {
-        match peng.load_program_from_binary_file_using(&root, &core) {
+        let bytes = match fs::read(&root) {
+            Ok(bytes) => bytes,
+
+            Err(e) => {
+                eprintln!("Failed to read '{root}':");
+                eprintln!("{e}");
+                return;
+            }
+        };
+
+        match peng.load_program_from_binary_using(&bytes, &core) {
             Ok(unit) => unit,
 
             Err(e) => {
@@ -34,7 +46,17 @@ pub fn execute_from_entry(entry: Option<&String>) {
             }
         }
     } else {
-        match peng.load_program_from_file_using(&root, &core, 0) {
+        let source = match fs::read_to_string(&root) {
+            Ok(source) => source,
+
+            Err(e) => {
+                eprintln!("Failed to read '{root}':");
+                eprintln!("{e}");
+                return;
+            }
+        };
+
+        match peng.load_program_from_source_using(&source, &core, 0) {
             Ok(unit) => unit,
 
             Err(e) => {
