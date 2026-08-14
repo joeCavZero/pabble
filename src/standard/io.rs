@@ -225,7 +225,6 @@ fn print_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
         PengValue::Box(PengBox::Operation(_)) => print!("<operation>"),
         PengValue::Box(PengBox::Thread(_)) => print!("<thread>"),
         PengValue::Box(PengBox::Type(_)) => print!("<type>"),
-        PengValue::Box(PengBox::Union(_)) => print!("<union>"),
 
         PengValue::Box(PengBox::String(s)) => print!("{}", s),
 
@@ -285,7 +284,6 @@ fn eprint_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
         PengValue::Box(PengBox::Operation(_)) => eprint!("<operation>"),
         PengValue::Box(PengBox::Thread(_)) => eprint!("<thread>"),
         PengValue::Box(PengBox::Type(_)) => eprint!("<type>"),
-        PengValue::Box(PengBox::Union(_)) => eprint!("<union>"),
 
         PengValue::Box(PengBox::String(s)) => eprint!("{}", s),
 

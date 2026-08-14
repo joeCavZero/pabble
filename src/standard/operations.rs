@@ -30,8 +30,8 @@ pub fn implements(ctx: &mut PengNativeOperationCallContext) -> Result<PengBinded
             }
         }
 
-        PengValue::Box(PengBox::Union(union)) => {
-            match value_impl_union(ctx, &left_value, union) {
+        PengValue::Box(PengBox::Vector(vector)) => {
+            match value_impl_types(ctx, &left_value, vector) {
                 Ok(result) => result,
                 Err(e) => return Err(e),
             }
@@ -39,7 +39,7 @@ pub fn implements(ctx: &mut PengNativeOperationCallContext) -> Result<PengBinded
 
         _ => {
             return Err(PengError::CannotCallValue(
-                "impls expected type or union on right side".into(),
+                "impls expected type or vector of types on right side".into(),
             ));
         }
     };
@@ -47,16 +47,41 @@ pub fn implements(ctx: &mut PengNativeOperationCallContext) -> Result<PengBinded
     Ok(PengBinded::Mutable(PengCell::Bool(result)))
 }
 
-fn value_impl_union(
+fn value_impl_types(
     ctx: &PengNativeOperationCallContext,
     value: &PengValue,
-    union: &PengUnion,
+    types: &PengVector,
 ) -> Result<bool, PengError> {
-    for expected in &union.unions {
-        match value_impl_type(ctx, value, expected) {
-            Ok(true) => return Ok(true),
+    for item in &types.values {
+        let item_value = match item.value() {
+            PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+                Some(value) => value.clone(),
+                None => return Err(PengError::HeapValueNotFound(*ptr)),
+            },
+
+            cell => PengValue::Cell(cell.clone()),
+        };
+
+        let expected_type = match &item_value {
+            PengValue::Box(PengBox::Type(expected_type)) => expected_type,
+
+            _ => {
+                return Err(PengError::CannotCallValue(
+                    "impls expected vector containing only types".into(),
+                ));
+            }
+        };
+
+        match value_impl_type(ctx, value, expected_type) {
+            Ok(true) => {
+                return Ok(true);
+            }
+
             Ok(false) => {}
-            Err(e) => return Err(e),
+
+            Err(e) => {
+                return Err(e);
+            }
         }
     }
 
@@ -89,11 +114,9 @@ fn value_impl_type(
         PengType::Type => {
             matches!(
                 value,
-                PengValue::Box(PengBox::Type(_)) | PengValue::Box(PengBox::Union(_))
+                PengValue::Box(PengBox::Type(_))
             )
         }
-
-        PengType::Union => matches!(value, PengValue::Box(PengBox::Union(_))),
 
         PengType::Vector(expected_inner) => match value {
             PengValue::Box(PengBox::Vector(vector)) => {
@@ -112,8 +135,14 @@ fn value_impl_type(
 
                         match value_impl_type(ctx, &item_value, expected_inner.as_ref()) {
                             Ok(true) => {}
-                            Ok(false) => return Ok(false),
-                            Err(e) => return Err(e),
+
+                            Ok(false) => {
+                                return Ok(false);
+                            }
+
+                            Err(e) => {
+                                return Err(e);
+                            }
                         }
                     }
 
