@@ -14,7 +14,7 @@ func main() {
     for (var i = 0; i < 40; i += 1) {
         clear_line()
 
-        var frame_index = i % convert:integer(frames.len())
+        var frame_index = i % convert:to_integer(frames.len())
         var frame = frames[frame_index]
 
         io:print("Compilando ")

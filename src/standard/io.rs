@@ -5,17 +5,33 @@ use penguin::prelude::*;
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_immutable_native_function(peng, "print", print).unwrap();
-    module.register_immutable_native_function(peng, "println", println).unwrap();
+    module
+        .register_immutable_native_function(peng, "print", print)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "println", println)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "eprint", eprint).unwrap();
-    module.register_immutable_native_function(peng, "eprintln", eprintln).unwrap();
+    module
+        .register_immutable_native_function(peng, "eprint", eprint)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "eprintln", eprintln)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "flush", flush).unwrap();
+    module
+        .register_immutable_native_function(peng, "flush", flush)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "read_line", read_line).unwrap();
-    module.register_immutable_native_function(peng, "read_all", read_all).unwrap();
-    module.register_immutable_native_function(peng, "read_byte", read_byte).unwrap();
+    module
+        .register_immutable_native_function(peng, "read_line", read_line)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "read_all", read_all)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "read_byte", read_byte)
+        .unwrap();
 
     module
         .register_immutable_native_function(peng, "clear_screen", clear_screen)
@@ -25,7 +41,10 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
 }
 
 fn print(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    print_args(&ctx);
+    match print_args(ctx) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
     match io::stdout().flush() {
         Ok(_) => Ok(PengBindedCell::Mutable(PengCell::Nil)),
@@ -36,10 +55,38 @@ fn print(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Peng
 }
 
 fn println(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
-    print_args(&ctx);
+    match print_args(ctx) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
     println!();
 
     Ok(PengBindedCell::Mutable(PengCell::Nil))
+}
+
+fn print_args(ctx: &mut PengNativeFunctionCallContext) -> Result<(), PengError> {
+    let mut index = 0usize;
+
+    loop {
+        let arg = match ctx.get_arg_cell(index) {
+            Some(arg) => arg.clone(),
+            None => break,
+        };
+
+        if index > 0 {
+            print!(" ");
+        }
+
+        match print_binded_cell(ctx, &arg) {
+            Ok(()) => {}
+            Err(e) => return Err(e),
+        }
+
+        index += 1;
+    }
+
+    Ok(())
 }
 
 fn eprint(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -131,24 +178,6 @@ fn clear_screen(_: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
     }
 }
 
-fn print_args(ctx: &PengNativeFunctionCallContext) {
-    let mut index = 0usize;
-
-    loop {
-        let arg = match ctx.get_arg_cell(index) {
-            Some(arg) => arg,
-            None => break,
-        };
-
-        if index > 0 {
-            print!(" ");
-        }
-
-        print_binded_cell(ctx, arg);
-        index += 1;
-    }
-}
-
 fn eprint_args(ctx: &PengNativeFunctionCallContext) {
     let mut index = 0usize;
 
@@ -167,7 +196,7 @@ fn eprint_args(ctx: &PengNativeFunctionCallContext) {
     }
 }
 
-fn print_cell(ctx: &PengNativeFunctionCallContext, cell: &PengCell) {
+fn print_cell(ctx: &mut PengNativeFunctionCallContext, cell: &PengCell) -> Result<(), PengError> {
     match cell {
         PengCell::Bool(v) => print!("{}", v),
         PengCell::Byte(v) => print!("{}", v),
@@ -177,8 +206,12 @@ fn print_cell(ctx: &PengNativeFunctionCallContext, cell: &PengCell) {
         PengCell::Nil => print!("nil"),
         PengCell::Uint(v) => print!("{}", v),
 
-        PengCell::Reference(ptr) => print_value_ref(ctx, *ptr),
+        PengCell::Reference(ptr) => {
+            return print_value_ref(ctx, *ptr);
+        }
     }
+
+    Ok(())
 }
 
 fn eprint_cell(ctx: &PengNativeFunctionCallContext, cell: &PengCell) {
@@ -195,18 +228,121 @@ fn eprint_cell(ctx: &PengNativeFunctionCallContext, cell: &PengCell) {
     }
 }
 
-fn print_binded_cell(ctx: &PengNativeFunctionCallContext, cell: &PengBindedCell) {
-    print_cell(ctx, cell.value());
+fn print_binded_cell(
+    ctx: &mut PengNativeFunctionCallContext,
+    cell: &PengBindedCell,
+) -> Result<(), PengError> {
+    print_cell(ctx, cell.value())
 }
 
 fn eprint_binded_cell(ctx: &PengNativeFunctionCallContext, cell: &PengBindedCell) {
     eprint_cell(ctx, cell.value());
 }
 
-fn print_value_ref(ctx: &PengNativeFunctionCallContext, ptr: PengHeapPtr) {
-    match ctx.get_value(ptr) {
-        Some(value) => print_value(ctx, value),
-        None => print!("<missing heap value>"),
+fn print_value_ref(
+    ctx: &mut PengNativeFunctionCallContext,
+    ptr: PengHeapPtr,
+) -> Result<(), PengError> {
+    let is_object = match ctx.get_value(ptr) {
+        Some(PengValue::Box(PengBox::Object(_))) => true,
+        Some(_) => false,
+        None => {
+            print!("<missing heap value>");
+            return Ok(());
+        }
+    };
+
+    if is_object {
+        match try_object_str(ctx, ptr) {
+            Ok(Some(value)) => {
+                print!("{}", value);
+                return Ok(());
+            }
+
+            Ok(None) => {}
+
+            Err(e) => return Err(e),
+        }
+    }
+
+    let value = match ctx.get_value(ptr) {
+        Some(value) => value.clone(),
+        None => {
+            print!("<missing heap value>");
+            return Ok(());
+        }
+    };
+
+    print_value(ctx, &value)
+}
+
+fn try_object_str(
+    ctx: &mut PengNativeFunctionCallContext,
+    object_ptr: PengHeapPtr,
+) -> Result<Option<String>, PengError> {
+    let str_name = ctx.env_mut().ensure_pooled_name_ptr("__str".to_string());
+
+    let str_method = match ctx.get_value(object_ptr) {
+        Some(PengValue::Box(PengBox::Object(object))) => match object.fields.get(&str_name) {
+            Some(method) => method.clone(),
+            None => return Ok(None),
+        },
+
+        Some(_) => return Ok(None),
+
+        None => return Err(PengError::HeapValueNotFound(object_ptr)),
+    };
+
+    let callable_ptr = match str_method.value() {
+        PengCell::Reference(ptr) => *ptr,
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "__str must be a function".to_string(),
+            ));
+        }
+    };
+
+    match ctx.get_value(callable_ptr) {
+        Some(PengValue::Box(PengBox::Function(_))) => {}
+
+        Some(_) => {
+            return Err(PengError::CannotCallValue(
+                "__str must be a function".to_string(),
+            ));
+        }
+
+        None => return Err(PengError::HeapValueNotFound(callable_ptr)),
+    }
+
+    let self_cell = PengBindedCell::Mutable(PengCell::Reference(object_ptr));
+
+    let thread = ctx.thread();
+    let unit = ctx.unit().clone();
+
+    let result = match call_function_sync(ctx.env_mut(), thread, &unit, str_method, vec![self_cell])
+    {
+        Ok(result) => result,
+        Err(e) => return Err(e),
+    };
+
+    let result_ptr = match result.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "__str must return a string".to_string(),
+            ));
+        }
+    };
+
+    match ctx.get_value(result_ptr) {
+        Some(PengValue::Box(PengBox::String(value))) => Ok(Some(value.clone())),
+
+        Some(_) => Err(PengError::CannotCallValue(
+            "__str must return a string".to_string(),
+        )),
+
+        None => Err(PengError::HeapValueNotFound(result_ptr)),
     }
 }
 
@@ -217,9 +353,14 @@ fn eprint_value_ref(ctx: &PengNativeFunctionCallContext, ptr: PengHeapPtr) {
     }
 }
 
-fn print_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
+fn print_value(
+    ctx: &mut PengNativeFunctionCallContext,
+    value: &PengValue,
+) -> Result<(), PengError> {
     match value {
-        PengValue::Cell(cell) => print_cell(ctx, cell),
+        PengValue::Cell(cell) => {
+            return print_cell(ctx, cell);
+        }
 
         PengValue::Box(PengBox::Function(_)) => print!("<function>"),
         PengValue::Box(PengBox::Operation(_)) => print!("<operation>"),
@@ -229,20 +370,30 @@ fn print_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
         PengValue::Box(PengBox::String(s)) => print!("{}", s),
 
         PengValue::Box(PengBox::Vector(v)) => {
+            let values = v.values.clone();
+
             print!("[");
-            for (i, value) in v.values.iter().enumerate() {
+
+            for (i, value) in values.iter().enumerate() {
                 if i > 0 {
                     print!(", ");
                 }
 
-                print_binded_cell(ctx, value);
+                match print_binded_cell(ctx, value) {
+                    Ok(()) => {}
+                    Err(e) => return Err(e),
+                }
             }
+
             print!("]");
         }
 
         PengValue::Box(PengBox::Object(o)) => {
+            let fields = o.fields.clone();
+
             print!("{{");
-            for (i, (name, value)) in o.fields.iter().enumerate() {
+
+            for (i, (name, value)) in fields.iter().enumerate() {
                 if i > 0 {
                     print!(", ");
                 }
@@ -252,14 +403,21 @@ fn print_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
                     None => print!("<name {:?}>: ", name),
                 }
 
-                print_binded_cell(ctx, value);
+                match print_binded_cell(ctx, value) {
+                    Ok(()) => {}
+                    Err(e) => return Err(e),
+                }
             }
+
             print!("}}");
         }
 
         PengValue::Box(PengBox::Module(m)) => {
+            let members = m.members.clone();
+
             print!("module {{");
-            for (i, (name, value)) in m.members.iter().enumerate() {
+
+            for (i, (name, value)) in members.iter().enumerate() {
                 if i > 0 {
                     print!(", ");
                 }
@@ -269,11 +427,17 @@ fn print_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {
                     None => print!("<name {:?}>: ", name),
                 }
 
-                print_binded_cell(ctx, value);
+                match print_binded_cell(ctx, value) {
+                    Ok(()) => {}
+                    Err(e) => return Err(e),
+                }
             }
+
             print!("}}");
         }
     }
+
+    Ok(())
 }
 
 fn eprint_value(ctx: &PengNativeFunctionCallContext, value: &PengValue) {

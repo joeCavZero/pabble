@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::project::config::PabbleProjectFile;
 
@@ -42,28 +42,76 @@ pub fn load_project_from_path(path: &Path) -> Result<PabbleProjectFile, String> 
     }
 }
 
-pub fn resolve_entry(entry: Option<&String>, default_entry: &str) -> Result<String, String> {
-    match entry {
-        Some(entry) => Ok(entry.clone()),
+pub fn resolve_entry(entry: Option<&String>) -> Result<PathBuf, String> {
+    let current_dir = match std::env::current_dir() {
+        Ok(current_dir) => current_dir,
+
+        Err(e) => {
+            return Err(format!(
+                "Failed to get current directory: {}",
+                e
+            ));
+        }
+    };
+
+    let entry_path = match entry {
+        Some(entry) => {
+            let path = PathBuf::from(entry);
+
+            if path.is_absolute() {
+                path
+            } else {
+                current_dir.join(path)
+            }
+        }
 
         None => {
             let project = match load_project_from_current_dir() {
-                Ok(project) => project,
-                Err(e) => return Err(e),
-            };
+                Ok(Some(project)) => project,
 
-            match project {
-                Some(project) => {
-                    if project.project.entry.trim().is_empty() {
-                        return Err("pabble.toml has empty project.entry".to_string());
-                    }
-
-                    Ok(project.project.entry)
+                Ok(None) => {
+                    return Err(
+                        "No pabble.toml found in current directory".to_string()
+                    );
                 }
 
-                None => Ok(default_entry.to_string()),
+                Err(e) => {
+                    return Err(e);
+                }
+            };
+
+            if project.project.entry.trim().is_empty() {
+                return Err(
+                    "pabble.toml has empty project.entry".to_string()
+                );
             }
+
+            current_dir.join(project.project.entry)
         }
+    };
+
+    if !entry_path.exists() {
+        return Err(format!(
+            "Entry '{}' not found",
+            entry_path.to_string_lossy()
+        ));
+    }
+
+    if !entry_path.is_file() {
+        return Err(format!(
+            "Entry '{}' is not a file",
+            entry_path.to_string_lossy()
+        ));
+    }
+
+    match fs::canonicalize(&entry_path) {
+        Ok(path) => Ok(path),
+
+        Err(e) => Err(format!(
+            "Failed to resolve entry '{}': {}",
+            entry_path.to_string_lossy(),
+            e
+        )),
     }
 }
 

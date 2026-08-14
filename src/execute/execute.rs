@@ -8,8 +8,8 @@ use crate::standard::*;
 use penguin::prelude::*;
 
 pub fn execute_from_entry(entry: Option<&String>) {
-    let root = match resolve_entry(entry, "main.peng") {
-        Ok(root) => root,
+    let entry_path = match resolve_entry(entry) {
+        Ok(entry_path) => entry_path,
 
         Err(e) => {
             eprintln!("{e}");
@@ -58,6 +58,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         std_registry,
         import_cache,
         dependencies,
+        entry_path.clone(),
     ) {
         Ok(()) => {}
 
@@ -68,42 +69,56 @@ pub fn execute_from_entry(entry: Option<&String>) {
         }
     }
 
-    let unit = if root.ends_with(".penb") {
-        let bytes = match fs::read(&root) {
-            Ok(bytes) => bytes,
+    let unit = match entry_path.extension() {
+        Some(extension) if extension == "penb" => {
+            let bytes = match fs::read(&entry_path) {
+                Ok(bytes) => bytes,
 
-            Err(e) => {
-                eprintln!("Failed to read '{root}':");
-                eprintln!("{e}");
-                return;
-            }
-        };
+                Err(e) => {
+                    eprintln!(
+                        "Failed to read '{}':",
+                        entry_path.to_string_lossy()
+                    );
+                    eprintln!("{e}");
+                    return;
+                }
+            };
 
-        match peng.load_program_from_binary_using(&bytes, &core) {
-            Ok(unit) => unit,
+            match peng.load_program_from_binary_using(&bytes, &core) {
+                Ok(unit) => unit,
 
-            Err(e) => {
-                println!("{:#?}", e);
-                return;
+                Err(e) => {
+                    println!("{:#?}", e);
+                    return;
+                }
             }
         }
-    } else {
-        let source = match fs::read_to_string(&root) {
-            Ok(source) => source,
 
-            Err(e) => {
-                eprintln!("Failed to read '{root}':");
-                eprintln!("{e}");
-                return;
-            }
-        };
+        _ => {
+            let source = match fs::read_to_string(&entry_path) {
+                Ok(source) => source,
 
-        match peng.load_program_from_source_using(&source, &core, 0) {
-            Ok(unit) => unit,
+                Err(e) => {
+                    eprintln!(
+                        "Failed to read '{}':",
+                        entry_path.to_string_lossy()
+                    );
+                    eprintln!("{e}");
+                    return;
+                }
+            };
 
-            Err(e) => {
-                println!("{:#?}", e);
-                return;
+            match peng.load_program_from_source_using(
+                &source,
+                &core,
+                0,
+            ) {
+                Ok(unit) => unit,
+
+                Err(e) => {
+                    println!("{:#?}", e);
+                    return;
+                }
             }
         }
     };
@@ -126,9 +141,15 @@ pub fn execute_from_entry(entry: Option<&String>) {
         }
     }
 
-    match peng.run_global_function("main", &unit, Vec::new()) {
+    match peng.run_global_function(
+        "main",
+        &unit,
+        Vec::new(),
+    ) {
         Ok(_) => {}
 
-        Err(e) => println!("{:#?}", e),
+        Err(e) => {
+            println!("{:#?}", e);
+        }
     }
 }
