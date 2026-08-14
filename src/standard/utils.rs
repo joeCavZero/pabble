@@ -395,3 +395,154 @@ pub fn get_number_arg(
 
     cell_to_number(ctx, &arg)
 }
+
+pub fn custom_binary_method(
+    ctx: &mut PengNativeFunctionCallContext,
+    method_name: &str,
+) -> Result<PengBindedCell, PengError> {
+    let receiver = match ctx.get_arg_cell(0) {
+        Some(receiver) => receiver.clone(),
+
+        None => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} expected left operand",
+                method_name
+            )));
+        }
+    };
+
+    let _right = match ctx.get_arg_cell(1) {
+        Some(right) => right.clone(),
+
+        None => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} expected right operand",
+                method_name
+            )));
+        }
+    };
+
+    let receiver_ptr = match receiver.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} not supported for this value",
+                method_name
+            )));
+        }
+    };
+
+    let method_name_ptr = ctx
+        .env_mut()
+        .ensure_pooled_name_ptr(method_name.to_string());
+
+    let method = match ctx.get_value(receiver_ptr) {
+        Some(PengValue::Box(PengBox::Object(object))) => {
+            match object.fields.get(&method_name_ptr) {
+                Some(method) => method.clone(),
+
+                None => {
+                    return Err(PengError::CannotCallValue(format!(
+                        "{} not implemented",
+                        method_name
+                    )));
+                }
+            }
+        }
+
+        Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {
+            match custom_type.fields.get(&method_name_ptr) {
+                Some(method) => method.clone(),
+
+                None => {
+                    return Err(PengError::CannotCallValue(format!(
+                        "{} not implemented",
+                        method_name
+                    )));
+                }
+            }
+        }
+
+        Some(_) => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} not supported for this value",
+                method_name
+            )));
+        }
+
+        None => {
+            return Err(PengError::HeapValueNotFound(receiver_ptr));
+        }
+    };
+
+    Ok(method)
+}
+
+pub fn custom_unary_method(
+    ctx: &mut PengNativeFunctionCallContext,
+    method_name: &str,
+) -> Result<PengBindedCell, PengError> {
+    let receiver = match ctx.get_arg_cell(0) {
+        Some(receiver) => receiver.clone(),
+
+        None => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} expected operand",
+                method_name
+            )));
+        }
+    };
+
+    let receiver_ptr = match receiver.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::CannotCallValue(format!(
+                "{} not supported for this value",
+                method_name
+            )));
+        }
+    };
+
+    let method_name_ptr = ctx
+        .env_mut()
+        .ensure_pooled_name_ptr(method_name.to_string());
+
+    match ctx.get_value(receiver_ptr) {
+        Some(PengValue::Box(PengBox::Object(object))) => {
+            match object.fields.get(&method_name_ptr) {
+                Some(method) => Ok(method.clone()),
+
+                None => {
+                    Err(PengError::CannotCallValue(format!(
+                        "{} not implemented",
+                        method_name
+                    )))
+                }
+            }
+        }
+
+        Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {
+            match custom_type.fields.get(&method_name_ptr) {
+                Some(method) => Ok(method.clone()),
+
+                None => {
+                    Err(PengError::CannotCallValue(format!(
+                        "{} not implemented",
+                        method_name
+                    )))
+                }
+            }
+        }
+
+        Some(_) => {
+            Err(PengError::CannotCallValue(format!(
+                "{} not supported for this value",
+                method_name
+            )))
+        }
+
+        None => Err(PengError::HeapValueNotFound(receiver_ptr)),
+    }
+}

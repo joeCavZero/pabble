@@ -1,6 +1,9 @@
 use penguin::prelude::*;
 
-pub fn register_custom_accesses(peng: &mut PengEnv, unit: &mut PengUnit) {
+use crate::standard::utils::*;
+
+pub fn register_customs(peng: &mut PengEnv, unit: &mut PengUnit) {
+    // CUSTOM ACCESSES
     unit.register_custom_access(peng, "len", len).unwrap();
     unit.register_custom_access(peng, "sum", sum).unwrap();
     unit.register_custom_access(peng, "push", push).unwrap();
@@ -12,7 +15,32 @@ pub fn register_custom_accesses(peng: &mut PengEnv, unit: &mut PengUnit) {
     unit.register_custom_access(peng, "join", join).unwrap();
     unit.register_custom_access(peng, "get", get).unwrap();
     unit.register_custom_access(peng, "is_finished", is_finished).unwrap();
+
+    // CUSTOM OPERATIONS
+    unit.register_custom_add(__add).unwrap();
+    unit.register_custom_subtract(__sub).unwrap();
+    unit.register_custom_multiply(__mul).unwrap();
+    unit.register_custom_divide(__div).unwrap();
+    unit.register_custom_power(__pow).unwrap();
+    unit.register_custom_remainder(__rem).unwrap();
+
+    unit.register_custom_negate(__neg).unwrap();
+    unit.register_custom_concat(__concat).unwrap();
+
+    unit.register_custom_and(__and).unwrap();
+    unit.register_custom_or(__or).unwrap();
+    unit.register_custom_not(__not).unwrap();
+
+    unit.register_custom_equals(__eq).unwrap();
+    unit.register_custom_not_equals(__ne).unwrap();
+    unit.register_custom_greater_than(__gt).unwrap();
+    unit.register_custom_greater_equals_than(__ge).unwrap();
+    unit.register_custom_less_than(__lt).unwrap();
+    unit.register_custom_less_equals_than(__le).unwrap();
+
 }
+
+// CUSTOM ACCESSES
 
 pub fn len(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     if let Some(value) = ctx.get_arg_value(0) {
@@ -481,4 +509,108 @@ pub fn is_finished(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinded
 
         None => Err(PengError::ThreadNotFound(receiver_ptr)),
     }
+}
+
+// CUSTOM OPERATORS
+
+pub fn __add(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__add")
+}
+
+pub fn __sub(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__sub")
+}
+
+pub fn __mul(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__mul")
+}
+
+pub fn __div(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__div")
+}
+
+pub fn __pow(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__pow")
+}
+
+pub fn __rem(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__rem")
+}
+
+pub fn __neg(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_unary_method(ctx, "__neg")
+}
+
+pub fn __concat(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__concat")
+}
+
+pub fn __and(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__and")
+}
+
+pub fn __or(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__or")
+}
+
+pub fn __not(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_unary_method(ctx, "__not")
+}
+
+pub fn __eq(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__eq")
+}
+
+pub fn __ne(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__ne")
+}
+
+pub fn __gt(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__gt")
+}
+
+pub fn __ge(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__ge")
+}
+
+pub fn __lt(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__lt")
+}
+
+pub fn __le(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    custom_binary_method(ctx, "__le")
 }

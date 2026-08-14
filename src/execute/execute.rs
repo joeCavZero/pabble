@@ -29,6 +29,16 @@ pub fn execute_from_entry(entry: Option<&String>) {
         }
     };
 
+    match crate::standard::raise::setup(&mut peng, &mut core) {
+        Ok(()) => {}
+
+        Err(e) => {
+            eprintln!("Failed to setup raise:");
+            eprintln!("{e:#?}");
+            return;
+        }
+    }
+
     let dependencies = match load_project_from_current_dir() {
         Ok(Some(project)) => project.dependencies,
 

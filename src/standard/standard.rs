@@ -1,6 +1,6 @@
 use penguin::prelude::*;
 
-use crate::standard::{custom_access::register_custom_accesses, *};
+use crate::standard::{customs::register_customs, *};
 
 use std::collections::HashMap;
 
@@ -41,7 +41,7 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PabbleStandardRe
 
     unit.register_immutable_native_operation(peng, "impls", operations::implements).unwrap();
 
-    register_custom_accesses(peng, unit);
+    register_customs(peng, unit);
 
     Ok(registry)
 }

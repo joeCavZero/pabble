@@ -43,7 +43,17 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
         }
     };
 
-        let dependencies = match load_project_from_current_dir() {
+    match standard::raise::setup(&mut peng, &mut using_unit) {
+        Ok(()) => {}
+
+        Err(e) => {
+            eprintln!("Failed to setup raise:");
+            eprintln!("{e:#?}");
+            return;
+        }
+    }
+
+    let dependencies = match load_project_from_current_dir() {
         Ok(Some(project)) => project.dependencies,
 
         Ok(None) => HashMap::new(),
@@ -56,7 +66,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
 
     let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
-        match standard::import::setup(
+    match standard::import::setup(
         &mut peng,
         &mut using_unit,
         std_registry,
