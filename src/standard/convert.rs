@@ -33,32 +33,28 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
 
                 PengCell::Float64(v) => *v as isize,
 
-                PengCell::Reference(ptr) => {
-                    match ctx.get_value(*ptr) {
-                        Some(PengValue::Box(PengBox::String(s))) => {
-                            match s.trim().parse::<isize>() {
-                                Ok(v) => v,
+                PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+                    Some(PengValue::Box(PengBox::String(s))) => match s.trim().parse::<isize>() {
+                        Ok(v) => v,
 
-                                Err(_) => {
-                                    return Err(PengError::CannotCallValue(format!(
-                                        "convert:to_integer() cannot convert '{}' to integer",
-                                        s
-                                    )));
-                                }
-                            }
+                        Err(_) => {
+                            return Err(PengError::CannotCallValue(format!(
+                                "convert:to_integer() cannot convert '{}' to integer",
+                                s
+                            )));
                         }
+                    },
 
-                        Some(_) => {
-                            return Err(PengError::CannotCallValue(
-                                "convert:to_integer() expected string or primitive value".into(),
-                            ));
-                        }
-
-                        None => {
-                            return Err(PengError::HeapValueNotFound(*ptr));
-                        }
+                    Some(_) => {
+                        return Err(PengError::CannotCallValue(
+                            "convert:to_integer() expected string or primitive value".into(),
+                        ));
                     }
-                }
+
+                    None => {
+                        return Err(PengError::HeapValueNotFound(*ptr));
+                    }
+                },
 
                 PengCell::Nil => {
                     return Err(PengError::CannotCallValue(
@@ -97,26 +93,84 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
 
                 PengCell::Nil => "nil".to_string(),
 
-                PengCell::Reference(ptr) => {
-                    match ctx.get_value(*ptr) {
-                        Some(PengValue::Box(PengBox::String(s))) => s.clone(),
+                PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+                    Some(PengValue::Box(PengBox::String(s))) => s.clone(),
 
-                        Some(_) => {
-                            return Err(PengError::CannotCallValue(
-                                "convert:string() expected string or primitive value".into(),
-                            ));
-                        }
-
-                        None => {
-                            return Err(PengError::HeapValueNotFound(*ptr));
-                        }
+                    Some(_) => {
+                        return Err(PengError::CannotCallValue(
+                            "convert:string() expected string or primitive value".into(),
+                        ));
                     }
-                }
+
+                    None => {
+                        return Err(PengError::HeapValueNotFound(*ptr));
+                    }
+                },
             };
 
             let ptr = ctx.create_box(PengBox::String(value));
 
             Ok(PengBinded::Mutable(PengCell::Reference(ptr)))
+        })
+        .unwrap();
+
+    module
+        .register_immutable_native_function(peng, "to_f64", |ctx| {
+            let arg = match ctx.get_arg_cell(0) {
+                Some(arg) => arg,
+                None => {
+                    return Err(PengError::CannotCallValue(
+                        "convert:to_f64() expected value".into(),
+                    ));
+                }
+            };
+
+            let value = match arg.value() {
+                PengCell::Int(v) => *v as f64,
+                PengCell::Uint(v) => *v as f64,
+                PengCell::Byte(v) => *v as f64,
+                PengCell::Float32(v) => *v as f64,
+                PengCell::Float64(v) => *v,
+
+                PengCell::Bool(v) => {
+                    if *v {
+                        1.0
+                    } else {
+                        0.0
+                    }
+                }
+
+                PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+                    Some(PengValue::Box(PengBox::String(s))) => match s.trim().parse::<f64>() {
+                        Ok(v) => v,
+
+                        Err(_) => {
+                            return Err(PengError::CannotCallValue(format!(
+                                "convert:to_f64() cannot convert '{}' to f64",
+                                s
+                            )));
+                        }
+                    },
+
+                    Some(_) => {
+                        return Err(PengError::CannotCallValue(
+                            "convert:to_f64() expected string or primitive value".into(),
+                        ));
+                    }
+
+                    None => {
+                        return Err(PengError::HeapValueNotFound(*ptr));
+                    }
+                },
+
+                PengCell::Nil => {
+                    return Err(PengError::CannotCallValue(
+                        "convert:to_f64() cannot convert nil to f64".into(),
+                    ));
+                }
+            };
+
+            Ok(PengBinded::Mutable(PengCell::Float64(value)))
         })
         .unwrap();
 

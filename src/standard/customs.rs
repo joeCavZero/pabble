@@ -2,42 +2,159 @@ use penguin::prelude::*;
 
 use crate::standard::utils::*;
 
-pub fn register_customs(peng: &mut PengEnv, unit: &mut PengUnit) {
+pub fn register_customs(
+    peng: &mut PengEnv,
+    unit: &mut PengUnit,
+) -> Result<(), PengError> {
     // CUSTOM ACCESSES
-    unit.register_custom_access(peng, "len", len).unwrap();
-    unit.register_custom_access(peng, "sum", sum).unwrap();
-    unit.register_custom_access(peng, "push", push).unwrap();
-    unit.register_custom_access(peng, "keys", keys).unwrap();
-    unit.register_custom_access(peng, "resume", resume).unwrap();
-    unit.register_custom_access(peng, "pause", pause).unwrap();
-    unit.register_custom_access(peng, "cancel", cancel).unwrap();
-    unit.register_custom_access(peng, "state", state).unwrap();
-    unit.register_custom_access(peng, "join", join).unwrap();
-    unit.register_custom_access(peng, "get", get).unwrap();
-    unit.register_custom_access(peng, "is_finished", is_finished).unwrap();
+    match unit.register_custom_access(peng, "len", len) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "sum", sum) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "push", push) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "keys", keys) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "resume", resume) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "pause", pause) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "cancel", cancel) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "state", state) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "join", join) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "get", get) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_access(peng, "is_finished", is_finished) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    // CUSTOM CALL
+    match unit.register_custom_call(__self) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
     // CUSTOM OPERATIONS
-    unit.register_custom_add(__add).unwrap();
-    unit.register_custom_subtract(__sub).unwrap();
-    unit.register_custom_multiply(__mul).unwrap();
-    unit.register_custom_divide(__div).unwrap();
-    unit.register_custom_power(__pow).unwrap();
-    unit.register_custom_remainder(__rem).unwrap();
+    match unit.register_custom_add(__add) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
-    unit.register_custom_negate(__neg).unwrap();
-    unit.register_custom_concat(__concat).unwrap();
+    match unit.register_custom_subtract(__sub) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
-    unit.register_custom_and(__and).unwrap();
-    unit.register_custom_or(__or).unwrap();
-    unit.register_custom_not(__not).unwrap();
+    match unit.register_custom_multiply(__mul) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
-    unit.register_custom_equals(__eq).unwrap();
-    unit.register_custom_not_equals(__ne).unwrap();
-    unit.register_custom_greater_than(__gt).unwrap();
-    unit.register_custom_greater_equals_than(__ge).unwrap();
-    unit.register_custom_less_than(__lt).unwrap();
-    unit.register_custom_less_equals_than(__le).unwrap();
+    match unit.register_custom_divide(__div) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
 
+    match unit.register_custom_power(__pow) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_remainder(__rem) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_negate(__neg) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_concat(__concat) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_and(__and) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_or(__or) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_not(__not) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_equals(__eq) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_not_equals(__ne) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_greater_than(__gt) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_greater_equals_than(__ge) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_less_than(__lt) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    match unit.register_custom_less_equals_than(__le) {
+        Ok(()) => {}
+        Err(e) => return Err(e),
+    }
+
+    Ok(())
 }
 
 // CUSTOM ACCESSES
@@ -613,4 +730,82 @@ pub fn __le(
     ctx: &mut PengNativeFunctionCallContext,
 ) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__le")
+}
+
+pub fn __self(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
+    let receiver = match ctx.get_arg_cell(0) {
+        Some(receiver) => receiver.clone(),
+
+        None => {
+            return Err(PengError::CannotCallValue(
+                "__self expected receiver".into(),
+            ));
+        }
+    };
+
+    let receiver_ptr = match receiver.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "__self not supported for this value".into(),
+            ));
+        }
+    };
+
+    let name_ptr = ctx
+        .env_mut()
+        .ensure_pooled_name_ptr("__self".to_string());
+
+    let method = match ctx.get_value(receiver_ptr) {
+        Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {
+            match custom_type.fields.get(&name_ptr) {
+                Some(method) => method.clone(),
+
+                None => {
+                    return Err(PengError::CannotCallValue(
+                        "custom type does not implement __self".into(),
+                    ));
+                }
+            }
+        }
+
+        Some(_) => {
+            return Err(PengError::CannotCallValue(
+                "__self not supported for this value".into(),
+            ));
+        }
+
+        None => {
+            return Err(PengError::HeapValueNotFound(receiver_ptr));
+        }
+    };
+
+    let method_ptr = match method.value() {
+        PengCell::Reference(ptr) => *ptr,
+
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "__self must be a function".into(),
+            ));
+        }
+    };
+
+    match ctx.get_value(method_ptr) {
+        Some(PengValue::Box(PengBox::Function(_))) => {}
+
+        Some(_) => {
+            return Err(PengError::CannotCallValue(
+                "__self must be a function".into(),
+            ));
+        }
+
+        None => {
+            return Err(PengError::HeapValueNotFound(method_ptr));
+        }
+    }
+
+    Ok(method)
 }
