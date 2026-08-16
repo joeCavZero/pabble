@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
 
-use crate::debug::error::{format_peng_error_with_sources, PengErrorSources};
+use crate::debug::error::{format_peng_error_with_env, PengErrorSources};
 use crate::project::*;
 use crate::standard::*;
 use penguin::prelude::*;
@@ -27,7 +27,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(std_registry) => std_registry,
 
         Err(e) => {
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     };
@@ -37,7 +37,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
 
         Err(e) => {
             eprintln!("Failed to setup raise:");
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     }
@@ -68,7 +68,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
 
         Err(e) => {
             eprintln!("Failed to setup import:");
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     }
@@ -89,7 +89,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
                 Ok(unit) => unit,
 
                 Err(e) => {
-                    eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+                    eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
                     return;
                 }
             }
@@ -110,7 +110,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
                 Ok(unit) => unit,
 
                 Err(e) => {
-                    eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+                    eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
                     return;
                 }
             }
@@ -121,7 +121,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(init) => init,
 
         Err(e) => {
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     };
@@ -130,7 +130,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(_) => {}
 
         Err(e) => {
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     }
@@ -139,7 +139,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(_) => {}
 
         Err(e) => {
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
         }
     }
 }

@@ -43,24 +43,50 @@ impl PengErrorSources {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+struct PengErrorFormatContext<'a> {
+    sources: Option<&'a PengErrorSources>,
+    env: Option<&'a PengEnv>,
+}
+
 pub fn format_peng_error(error: PengError) -> String {
-    format_peng_error_impl(error, None)
+    format_peng_error_impl(error, PengErrorFormatContext::default())
 }
 
 pub fn format_peng_error_with_sources(error: PengError, sources: &PengErrorSources) -> String {
-    format_peng_error_impl(error, Some(sources))
+    format_peng_error_impl(
+        error,
+        PengErrorFormatContext {
+            sources: Some(sources),
+            env: None,
+        },
+    )
 }
 
-fn format_peng_error_impl(error: PengError, sources: Option<&PengErrorSources>) -> String {
+pub fn format_peng_error_with_env(
+    error: PengError,
+    sources: &PengErrorSources,
+    env: &PengEnv,
+) -> String {
+    format_peng_error_impl(
+        error,
+        PengErrorFormatContext {
+            sources: Some(sources),
+            env: Some(env),
+        },
+    )
+}
+
+fn format_peng_error_impl(error: PengError, ctx: PengErrorFormatContext<'_>) -> String {
     let mut output = String::new();
 
     output.push_str(&format!(
         "{} {}\n",
         "[error]".red().bold(),
-        error_title(&error).bold()
+        error_title(&error, ctx).bold()
     ));
 
-    render_error(&error, &mut output, 0, sources);
+    render_error(&error, &mut output, 0, ctx);
 
     output.trim_end().to_string()
 }
@@ -69,7 +95,7 @@ fn render_error(
     error: &PengError,
     output: &mut String,
     indent: usize,
-    sources: Option<&PengErrorSources>,
+    ctx: PengErrorFormatContext<'_>,
 ) {
     match error {
         PengError::Stack(errors) => {
@@ -79,9 +105,9 @@ fn render_error(
                 push_line(
                     output,
                     indent + 1,
-                    &format!("{}. {}", index + 1, error_title(error)),
+                    &format!("{}. {}", index + 1, error_title(error, ctx)),
                 );
-                render_error_details(error, output, indent + 2, sources);
+                render_error_details(error, output, indent + 2, ctx);
             }
         }
 
@@ -89,17 +115,17 @@ fn render_error(
             push_line(
                 output,
                 indent,
-                &format!("at {}", format_position(position, sources)),
+                &format!("at {}", format_position(position, ctx)),
             );
-            render_error(error, output, indent, sources);
+            render_error(error, output, indent, ctx);
         }
 
         PengError::Raised(error) => {
             push_line(output, indent, "raised error:");
-            render_error(error, output, indent + 1, sources);
+            render_error(error, output, indent + 1, ctx);
         }
 
-        _ => render_error_details(error, output, indent, sources),
+        _ => render_error_details(error, output, indent, ctx),
     }
 }
 
@@ -107,18 +133,18 @@ fn render_error_details(
     error: &PengError,
     output: &mut String,
     indent: usize,
-    sources: Option<&PengErrorSources>,
+    ctx: PengErrorFormatContext<'_>,
 ) {
     match error {
         PengError::Stack(_) | PengError::PositionedError { .. } | PengError::Raised(_) => {
-            render_error(error, output, indent, sources);
+            render_error(error, output, indent, ctx);
         }
 
         PengError::Position(position) => {
             push_line(
                 output,
                 indent,
-                &format!("at {}", format_position(position, sources)),
+                &format!("at {}", format_position(position, ctx)),
             );
         }
 
@@ -127,7 +153,7 @@ fn render_error_details(
             push_line(
                 output,
                 indent,
-                &format!("at {}", format_position(position, sources)),
+                &format!("at {}", format_position(position, ctx)),
             );
         }
 
@@ -199,42 +225,42 @@ fn render_error_details(
         }
 
         _ => {
-            push_line(output, indent, &error_message(error));
+            push_line(output, indent, &error_message(error, ctx));
         }
     }
 }
 
-fn error_title(error: &PengError) -> String {
+fn error_title(error: &PengError, ctx: PengErrorFormatContext<'_>) -> String {
     match error {
         PengError::Stack(_) => "multiple errors".to_string(),
         PengError::Position(_) => "source position".to_string(),
         PengError::PositionedMessage { message, .. } => message.clone(),
-        PengError::PositionedError { error, .. } => error_title(error),
-        PengError::Raised(error) => format!("raised {}", error_title(error)),
-        _ => error_message(error),
+        PengError::PositionedError { error, .. } => error_title(error, ctx),
+        PengError::Raised(error) => format!("raised {}", error_title(error, ctx)),
+        _ => error_message(error, ctx),
     }
 }
 
-fn error_message(error: &PengError) -> String {
+fn error_message(error: &PengError, ctx: PengErrorFormatContext<'_>) -> String {
     match error {
         PengError::Stack(errors) => format!("{} errors were reported", errors.len()),
-        PengError::Position(position) => format!("position {}", format_position(position, None)),
+        PengError::Position(position) => format!("position {}", format_position(position, ctx)),
         PengError::PositionedMessage { message, .. } => message.clone(),
-        PengError::PositionedError { error, .. } => error_message(error),
+        PengError::PositionedError { error, .. } => error_message(error, ctx),
         PengError::InternalError(message) => format!("internal error: {message}"),
         PengError::NotImplemented(message) => format!("not implemented: {message}"),
         PengError::InvalidState(message) => format!("invalid state: {message}"),
-        PengError::NameNotFound(name) => format!("name not found: {}", format_name(*name)),
+        PengError::NameNotFound(name) => format!("name not found: {}", format_name(*name, ctx)),
         PengError::NameAlreadyDefined(name) => {
-            format!("name already defined: {}", format_name(*name))
+            format!("name already defined: {}", format_name(*name, ctx))
         }
         PengError::LocalNotFound(index) => format!("local not found: #{index}"),
-        PengError::GlobalNotFound(name) => format!("global not found: {}", format_name(*name)),
+        PengError::GlobalNotFound(name) => format!("global not found: {}", format_name(*name, ctx)),
         PengError::AttributeNotFound(name) => {
-            format!("attribute not found: {}", format_name(*name))
+            format!("attribute not found: {}", format_name(*name, ctx))
         }
         PengError::AttributeAlreadyDefined(name) => {
-            format!("attribute already defined: {}", format_name(*name))
+            format!("attribute already defined: {}", format_name(*name, ctx))
         }
         PengError::HeapValueNotFound(ptr) => format!("heap value not found: {}", format_ptr(*ptr)),
         PengError::InvalidReference(ptr) => format!("invalid reference: {}", format_ptr(*ptr)),
@@ -288,7 +314,10 @@ fn error_message(error: &PengError) -> String {
         PengError::ProgramCounterOutOfBounds { .. } => "program counter out of bounds".to_string(),
         PengError::InstructionExpectedConstant => "instruction expected a constant".to_string(),
         PengError::InvalidInstruction(instruction) => {
-            format!("invalid instruction: {}", compact_debug(instruction))
+            format!(
+                "invalid instruction: {}",
+                format_instruction(instruction, ctx)
+            )
         }
         PengError::ThreadNotFound(ptr) => format!("thread not found: {}", format_ptr(*ptr)),
         PengError::CurrentThreadNotFound => "current thread not found".to_string(),
@@ -300,13 +329,14 @@ fn error_message(error: &PengError) -> String {
         PengError::BreakOutsideLoop => "break outside loop".to_string(),
         PengError::ContinueOutsideLoop => "continue outside loop".to_string(),
         PengError::RaiseOutsideTry => "raise outside try".to_string(),
-        PengError::Raised(error) => format!("raised {}", error_message(error)),
+        PengError::Raised(error) => format!("raised {}", error_message(error, ctx)),
         PengError::UserError(values) => format!("user error with {} value(s)", values.len()),
     }
 }
 
-fn format_position(position: &PengPosition, sources: Option<&PengErrorSources>) -> String {
-    let source = sources
+fn format_position(position: &PengPosition, ctx: PengErrorFormatContext<'_>) -> String {
+    let source = ctx
+        .sources
         .and_then(|sources| sources.get(position.id))
         .unwrap_or_else(|| format!("source #{}", position.id));
 
@@ -320,8 +350,32 @@ fn format_ptr(ptr: PengHeapPtr) -> String {
     format!("#{}", ptr.0)
 }
 
-fn format_name(name: PengNamePoolPtr) -> String {
-    format!("#{}", name.0)
+fn format_name(name: PengNamePoolPtr, ctx: PengErrorFormatContext<'_>) -> String {
+    match ctx.env.and_then(|env| env.get_pooled_name(name)) {
+        Some(name) => format!("'{name}'"),
+        None => format!("#{}", name.0),
+    }
+}
+
+fn format_instruction(instruction: &PengInstruction, ctx: PengErrorFormatContext<'_>) -> String {
+    match instruction {
+        PengInstruction::PushString(name) => {
+            format!("PushString({})", format_name(*name, ctx))
+        }
+        PengInstruction::GetAttribute(name) => {
+            format!("GetAttribute({})", format_name(*name, ctx))
+        }
+        PengInstruction::SetAttribute(name) => {
+            format!("SetAttribute({})", format_name(*name, ctx))
+        }
+        PengInstruction::GetMember(name) => {
+            format!("GetMember({})", format_name(*name, ctx))
+        }
+        PengInstruction::SetMember(name) => {
+            format!("SetMember({})", format_name(*name, ctx))
+        }
+        _ => compact_debug(instruction),
+    }
 }
 
 fn compact_debug(value: &impl std::fmt::Debug) -> String {

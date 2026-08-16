@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use penguin::prelude::*;
 
-use crate::debug::error::{format_peng_error_with_sources, PengErrorSources};
+use crate::debug::error::{format_peng_error_with_env, PengErrorSources};
 use crate::project::*;
 use crate::standard;
 
@@ -43,7 +43,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
 
         Err(e) => {
             eprintln!("Failed to setup standard library:");
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     };
@@ -53,7 +53,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
 
         Err(e) => {
             eprintln!("Failed to setup raise:");
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     }
@@ -84,7 +84,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
 
         Err(e) => {
             eprintln!("Failed to setup import:");
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     }
@@ -99,7 +99,7 @@ pub fn compile(entry: &Option<String>, output: &Option<String>) {
 
         Err(e) => {
             eprintln!("Failed to compile '{}':", input.to_string_lossy());
-            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            eprintln!("{}", format_peng_error_with_env(e, &error_sources, &peng));
             return;
         }
     };

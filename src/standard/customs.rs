@@ -60,7 +60,7 @@ pub fn register_customs(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<(), P
     }
 
     // CUSTOM CALL
-    match unit.register_custom_call(__self) {
+    match unit.register_custom_call(__call) {
         Ok(()) => {}
         Err(e) => return Err(e),
     }
@@ -682,13 +682,15 @@ pub fn __le(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, P
     custom_binary_method(ctx, "__le")
 }
 
-pub fn __self(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+pub fn __call(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     let receiver = match ctx.get_arg_cell(0) {
         Some(receiver) => receiver.clone(),
 
         None => {
             return Err(PengError::CannotCallValue(
-                "__self expected receiver".into(),
+                "custom call expected receiver".into(),
             ));
         }
     };
@@ -698,34 +700,68 @@ pub fn __self(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
 
         _ => {
             return Err(PengError::CannotCallValue(
-                "__self not supported for this value".into(),
+                "value is not callable".into(),
             ));
         }
     };
 
-    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr("__self".to_string());
+    let receiver_value = match ctx.get_value(receiver_ptr) {
+        Some(value) => value.clone(),
 
-    let method = match ctx.get_value(receiver_ptr) {
-        Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {
+        None => {
+            return Err(PengError::HeapValueNotFound(receiver_ptr));
+        }
+    };
+
+    let method_name = match &receiver_value {
+        PengValue::Box(PengBox::Type(PengType::Custom(_))) => {
+            "__constructor"
+        }
+
+        PengValue::Box(PengBox::Object(_)) => {
+            "__self"
+        }
+
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "value is not callable".into(),
+            ));
+        }
+    };
+
+    let name_ptr = ctx
+        .env_mut()
+        .ensure_pooled_name_ptr(method_name.to_string());
+
+    let method = match receiver_value {
+        PengValue::Box(PengBox::Type(PengType::Custom(custom_type))) => {
             match custom_type.fields.get(&name_ptr) {
                 Some(method) => method.clone(),
 
                 None => {
                     return Err(PengError::CannotCallValue(
-                        "custom type does not implement __self".into(),
+                        "custom type does not implement __constructor".into(),
                     ));
                 }
             }
         }
 
-        Some(_) => {
-            return Err(PengError::CannotCallValue(
-                "__self not supported for this value".into(),
-            ));
+        PengValue::Box(PengBox::Object(object)) => {
+            match object.fields.get(&name_ptr) {
+                Some(method) => method.clone(),
+
+                None => {
+                    return Err(PengError::CannotCallValue(
+                        "object does not implement __self".into(),
+                    ));
+                }
+            }
         }
 
-        None => {
-            return Err(PengError::HeapValueNotFound(receiver_ptr));
+        _ => {
+            return Err(PengError::CannotCallValue(
+                "value is not callable".into(),
+            ));
         }
     };
 
@@ -734,7 +770,7 @@ pub fn __self(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
 
         _ => {
             return Err(PengError::CannotCallValue(
-                "__self must be a function".into(),
+                "custom call method must be a function".into(),
             ));
         }
     };
@@ -744,7 +780,7 @@ pub fn __self(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
 
         Some(_) => {
             return Err(PengError::CannotCallValue(
-                "__self must be a function".into(),
+                "custom call method must be a function".into(),
             ));
         }
 
