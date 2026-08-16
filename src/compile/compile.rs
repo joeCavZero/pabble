@@ -5,13 +5,11 @@ use std::rc::Rc;
 
 use penguin::prelude::*;
 
+use crate::debug::error::{format_peng_error_with_sources, PengErrorSources};
 use crate::project::*;
 use crate::standard;
 
-pub fn compile(
-    entry: &Option<String>,
-    output: &Option<String>,
-) {
+pub fn compile(entry: &Option<String>, output: &Option<String>) {
     let input = match resolve_entry(entry.as_ref()) {
         Ok(input) => input,
 
@@ -23,10 +21,7 @@ pub fn compile(
 
     let input_string = input.to_string_lossy().into_owned();
 
-    let output = resolve_compile_output(
-        &input_string,
-        output.as_ref(),
-    );
+    let output = resolve_compile_output(&input_string, output.as_ref());
 
     let source = match fs::read_to_string(&input) {
         Ok(source) => source,
@@ -40,27 +35,25 @@ pub fn compile(
 
     let mut peng = PengEnv::new();
     let mut using_unit = PengUnit::library();
+    let error_sources = PengErrorSources::new();
+    error_sources.insert_path(0, &input);
 
-    let std_registry =
-        match standard::standard::setup(&mut peng, &mut using_unit) {
-            Ok(std_registry) => std_registry,
+    let std_registry = match standard::standard::setup(&mut peng, &mut using_unit) {
+        Ok(std_registry) => std_registry,
 
-            Err(e) => {
-                eprintln!("Failed to setup standard library:");
-                eprintln!("{e:#?}");
-                return;
-            }
-        };
+        Err(e) => {
+            eprintln!("Failed to setup standard library:");
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            return;
+        }
+    };
 
-    match standard::raise::setup(
-        &mut peng,
-        &mut using_unit,
-    ) {
+    match standard::raise::setup(&mut peng, &mut using_unit) {
         Ok(()) => {}
 
         Err(e) => {
             eprintln!("Failed to setup raise:");
-            eprintln!("{e:#?}");
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     }
@@ -76,14 +69,14 @@ pub fn compile(
         }
     };
 
-    let import_cache =
-        Rc::new(RefCell::new(HashMap::new()));
+    let import_cache = Rc::new(RefCell::new(HashMap::new()));
 
     match standard::import::setup(
         &mut peng,
         &mut using_unit,
         std_registry,
         import_cache,
+        error_sources.clone(),
         dependencies,
         input.clone(),
     ) {
@@ -91,37 +84,29 @@ pub fn compile(
 
         Err(e) => {
             eprintln!("Failed to setup import:");
-            eprintln!("{e:#?}");
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     }
 
-    let bytes =
-        match peng.compile_program_to_binary_using(
-            &source,
-            &using_unit,
-            &PengBinaryBuildOptions::default(),
-            0,
-        ) {
-            Ok(bytes) => bytes,
+    let bytes = match peng.compile_program_to_binary_using(
+        &source,
+        &using_unit,
+        &PengBinaryBuildOptions::default(),
+        0,
+    ) {
+        Ok(bytes) => bytes,
 
-            Err(e) => {
-                eprintln!(
-                    "Failed to compile '{}':",
-                    input.to_string_lossy()
-                );
-                eprintln!("{e:#?}");
-                return;
-            }
-        };
+        Err(e) => {
+            eprintln!("Failed to compile '{}':", input.to_string_lossy());
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
+            return;
+        }
+    };
 
     match fs::write(&output, bytes) {
         Ok(()) => {
-            println!(
-                "Compiled '{}' -> '{}'",
-                input.to_string_lossy(),
-                output
-            );
+            println!("Compiled '{}' -> '{}'", input.to_string_lossy(), output);
         }
 
         Err(e) => {

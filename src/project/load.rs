@@ -47,10 +47,7 @@ pub fn resolve_entry(entry: Option<&String>) -> Result<PathBuf, String> {
         Ok(current_dir) => current_dir,
 
         Err(e) => {
-            return Err(format!(
-                "Failed to get current directory: {}",
-                e
-            ));
+            return Err(format!("Failed to get current directory: {}", e));
         }
     };
 
@@ -70,9 +67,7 @@ pub fn resolve_entry(entry: Option<&String>) -> Result<PathBuf, String> {
                 Ok(Some(project)) => project,
 
                 Ok(None) => {
-                    return Err(
-                        "No pabble.toml found in current directory".to_string()
-                    );
+                    return Err("No pabble.toml found in current directory".to_string());
                 }
 
                 Err(e) => {
@@ -81,9 +76,7 @@ pub fn resolve_entry(entry: Option<&String>) -> Result<PathBuf, String> {
             };
 
             if project.project.entry.trim().is_empty() {
-                return Err(
-                    "pabble.toml has empty project.entry".to_string()
-                );
+                return Err("pabble.toml has empty project.entry".to_string());
             }
 
             current_dir.join(project.project.entry)

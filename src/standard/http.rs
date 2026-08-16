@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 use penguin::prelude::*;
 
 use super::utils;
 
-use ureq::ResponseExt;
 use ureq::http::Method;
+use ureq::ResponseExt;
 
 #[derive(Debug, Clone)]
 struct HttpRequestData {
@@ -61,12 +61,18 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let client_type = client_type_value(peng);
-    module.register_immutable_global(peng, "Client", client_type).unwrap();
+    module
+        .register_immutable_global(peng, "Client", client_type)
+        .unwrap();
 
     let request_type = request_type_value(peng);
-    module.register_immutable_global(peng, "Request", request_type).unwrap();
+    module
+        .register_immutable_global(peng, "Request", request_type)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "send", send).unwrap();
+    module
+        .register_immutable_native_function(peng, "send", send)
+        .unwrap();
 
     module
         .register_immutable_native_function(peng, "set_header", set_header)
@@ -121,9 +127,7 @@ fn client_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Immutable(PengCell::Reference(send_async_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn request_type_value(peng: &mut PengEnv) -> PengValue {
@@ -132,21 +136,13 @@ fn request_type_value(peng: &mut PengEnv) -> PengValue {
     let method = utils::string_binded_cell_from_env(peng, "GET".to_string());
     let url = utils::string_binded_cell_from_env(peng, "".to_string());
 
-    let headers_ptr = peng.create_heap_value(PengValue::Box(PengBox::Object(
-        PengObject {
-            fields: HashMap::new(),
-        },
-    )));
+    let headers_ptr = peng.create_heap_value(PengValue::Box(PengBox::Object(PengObject {
+        fields: HashMap::new(),
+    })));
 
-    fields.insert(
-        peng.ensure_pooled_name_ptr("method".to_string()),
-        method,
-    );
+    fields.insert(peng.ensure_pooled_name_ptr("method".to_string()), method);
 
-    fields.insert(
-        peng.ensure_pooled_name_ptr("url".to_string()),
-        url,
-    );
+    fields.insert(peng.ensure_pooled_name_ptr("url".to_string()), url);
 
     fields.insert(
         peng.ensure_pooled_name_ptr("body".to_string()),
@@ -158,9 +154,7 @@ fn request_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Mutable(PengCell::Reference(headers_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn send(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -710,10 +704,7 @@ where
     let mut response = match agent.run(request) {
         Ok(response) => response,
         Err(e) => {
-            return Err(format!(
-                "http:{}() request failed: {}",
-                function_name, e
-            ));
+            return Err(format!("http:{}() request failed: {}", function_name, e));
         }
     };
 
@@ -770,7 +761,10 @@ fn response_data_to_object(
     utils::new_object(
         ctx,
         vec![
-            ("status", PengBindedCell::Mutable(PengCell::Uint(response.status))),
+            (
+                "status",
+                PengBindedCell::Mutable(PengCell::Uint(response.status)),
+            ),
             ("ok", PengBindedCell::Mutable(PengCell::Bool(response.ok))),
             ("reason", reason),
             ("headers", headers),
@@ -788,17 +782,17 @@ fn task_object(
     let get_state = state.clone();
     let error_state = state.clone();
 
-    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
-    )));
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_is_finished(ctx, is_finished_state.clone())
+    })));
 
-    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_get(ctx, get_state.clone()),
-    )));
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_get(ctx, get_state.clone())
+    })));
 
-    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_error(ctx, error_state.clone()),
-    )));
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_error(ctx, error_state.clone())
+    })));
 
     utils::new_object(
         ctx,

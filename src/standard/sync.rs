@@ -8,19 +8,29 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let mutex_type = mutex_type_value(peng);
-    module.register_immutable_global(peng, "Mutex", mutex_type).unwrap();
+    module
+        .register_immutable_global(peng, "Mutex", mutex_type)
+        .unwrap();
 
     let atomic_bool_type = atomic_bool_type_value(peng);
-    module.register_immutable_global(peng, "AtomicBool", atomic_bool_type).unwrap();
+    module
+        .register_immutable_global(peng, "AtomicBool", atomic_bool_type)
+        .unwrap();
 
     let atomic_int_type = atomic_int_type_value(peng);
-    module.register_immutable_global(peng, "AtomicInt", atomic_int_type).unwrap();
+    module
+        .register_immutable_global(peng, "AtomicInt", atomic_int_type)
+        .unwrap();
 
     let channel_type = channel_type_value(peng);
-    module.register_immutable_global(peng, "Channel", channel_type).unwrap();
+    module
+        .register_immutable_global(peng, "Channel", channel_type)
+        .unwrap();
 
     let once_type = once_type_value(peng);
-    module.register_immutable_global(peng, "Once", once_type).unwrap();
+    module
+        .register_immutable_global(peng, "Once", once_type)
+        .unwrap();
 
     module
 }
@@ -69,9 +79,7 @@ fn mutex_type_value(peng: &mut PengEnv) -> PengValue {
         PengBinded::Immutable(PengCell::Reference(is_locked_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn atomic_bool_type_value(peng: &mut PengEnv) -> PengValue {
@@ -109,9 +117,7 @@ fn atomic_bool_type_value(peng: &mut PengEnv) -> PengValue {
         PengBinded::Immutable(PengCell::Reference(swap_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn atomic_int_type_value(peng: &mut PengEnv) -> PengValue {
@@ -167,9 +173,7 @@ fn atomic_int_type_value(peng: &mut PengEnv) -> PengValue {
         PengBinded::Immutable(PengCell::Reference(swap_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn channel_type_value(peng: &mut PengEnv) -> PengValue {
@@ -216,9 +220,7 @@ fn channel_type_value(peng: &mut PengEnv) -> PengValue {
         PengBinded::Immutable(PengCell::Reference(len_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn once_type_value(peng: &mut PengEnv) -> PengValue {
@@ -256,9 +258,7 @@ fn once_type_value(peng: &mut PengEnv) -> PengValue {
         PengBinded::Immutable(PengCell::Reference(is_done_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn mutex_lock(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -468,12 +468,7 @@ fn atomic_int_set(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedC
         Err(e) => return Err(e),
     };
 
-    match set_field(
-        ctx,
-        ptr,
-        "value",
-        PengBinded::Mutable(PengCell::Int(value)),
-    ) {
+    match set_field(ctx, ptr, "value", PengBinded::Mutable(PengCell::Int(value))) {
         Ok(_) => {}
         Err(e) => return Err(e),
     }
@@ -970,18 +965,16 @@ fn get_channel_queue(
     match cell.value() {
         PengCell::Nil => Ok(None),
 
-        PengCell::Reference(ptr) => {
-            match ctx.get_value(*ptr) {
-                Some(PengValue::Box(PengBox::Vector(_))) => Ok(Some(*ptr)),
+        PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+            Some(PengValue::Box(PengBox::Vector(_))) => Ok(Some(*ptr)),
 
-                Some(_) => Err(PengError::CannotCallValue(format!(
-                    "sync:{}() channel values must be vector",
-                    function_name
-                ))),
+            Some(_) => Err(PengError::CannotCallValue(format!(
+                "sync:{}() channel values must be vector",
+                function_name
+            ))),
 
-                None => Err(PengError::HeapValueNotFound(*ptr)),
-            }
-        }
+            None => Err(PengError::HeapValueNotFound(*ptr)),
+        },
 
         _ => Err(PengError::CannotCallValue(format!(
             "sync:{}() channel values must be vector or nil",

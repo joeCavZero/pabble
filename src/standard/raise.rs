@@ -1,9 +1,6 @@
 use penguin::prelude::*;
 
-pub fn setup(
-    peng: &mut PengEnv,
-    unit: &mut PengUnit,
-) -> Result<(), PengError> {
+pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<(), PengError> {
     match unit.register_immutable_native_function(peng, "raise", |ctx| {
         let mut values = Vec::new();
 
@@ -23,9 +20,7 @@ pub fn setup(
             index += 1;
         }
 
-        Err(PengError::Raised(Box::new(
-            PengError::UserError(values),
-        )))
+        Err(PengError::Raised(Box::new(PengError::UserError(values))))
     }) {
         Ok(_) => Ok(()),
 

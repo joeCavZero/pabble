@@ -2,10 +2,7 @@ use penguin::prelude::*;
 
 use crate::standard::utils::*;
 
-pub fn register_customs(
-    peng: &mut PengEnv,
-    unit: &mut PengUnit,
-) -> Result<(), PengError> {
+pub fn register_customs(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<(), PengError> {
     // CUSTOM ACCESSES
     match unit.register_custom_access(peng, "len", len) {
         Ok(()) => {}
@@ -434,19 +431,17 @@ pub fn join(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, P
     };
 
     match ctx.get_value(target_ptr) {
-        Some(PengValue::Box(PengBox::Thread(thread))) => {
-            match &thread.result {
-                PengThreadResult::Returned(value) => {
-                    return Ok(value.clone());
-                }
-
-                PengThreadResult::Failed(e) => {
-                    return Err((**e).clone());
-                }
-
-                PengThreadResult::Pending => {}
+        Some(PengValue::Box(PengBox::Thread(thread))) => match &thread.result {
+            PengThreadResult::Returned(value) => {
+                return Ok(value.clone());
             }
-        }
+
+            PengThreadResult::Failed(e) => {
+                return Err((**e).clone());
+            }
+
+            PengThreadResult::Pending => {}
+        },
 
         Some(_) => {
             return Err(PengError::CannotCallValue(
@@ -482,9 +477,7 @@ pub fn get(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
     let receiver = match ctx.get_arg_cell(0) {
         Some(cell) => cell.clone(),
         None => {
-            return Err(PengError::CannotCallValue(
-                "get() expected receiver".into(),
-            ));
+            return Err(PengError::CannotCallValue("get() expected receiver".into()));
         }
     };
 
@@ -494,45 +487,41 @@ pub fn get(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
     };
 
     let key_name_ptr = match ctx.get_arg_cell(1) {
-        Some(cell) => {
-            match cell.value() {
-                PengCell::Reference(ptr) => {
-                    let string = match ctx.get_value(*ptr) {
-                        Some(PengValue::Box(PengBox::String(s))) => s.clone(),
-                        Some(_) => String::new(),
-                        None => return Err(PengError::HeapValueNotFound(*ptr)),
-                    };
+        Some(cell) => match cell.value() {
+            PengCell::Reference(ptr) => {
+                let string = match ctx.get_value(*ptr) {
+                    Some(PengValue::Box(PengBox::String(s))) => s.clone(),
+                    Some(_) => String::new(),
+                    None => return Err(PengError::HeapValueNotFound(*ptr)),
+                };
 
-                    if string.is_empty() {
-                        None
-                    } else {
-                        Some(ctx.env_mut().ensure_pooled_name_ptr(string))
-                    }
+                if string.is_empty() {
+                    None
+                } else {
+                    Some(ctx.env_mut().ensure_pooled_name_ptr(string))
                 }
-
-                _ => None,
             }
-        }
+
+            _ => None,
+        },
 
         None => None,
     };
 
     let key_index = match ctx.get_arg_cell(1) {
-        Some(cell) => {
-            match cell.value() {
-                PengCell::Int(v) => {
-                    if *v < 0 {
-                        None
-                    } else {
-                        Some(*v as usize)
-                    }
+        Some(cell) => match cell.value() {
+            PengCell::Int(v) => {
+                if *v < 0 {
+                    None
+                } else {
+                    Some(*v as usize)
                 }
-
-                PengCell::Uint(v) => Some(*v),
-
-                _ => None,
             }
-        }
+
+            PengCell::Uint(v) => Some(*v),
+
+            _ => None,
+        },
 
         None => None,
     };
@@ -546,13 +535,11 @@ pub fn get(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pe
     };
 
     match ctx.get_value(receiver_ptr) {
-        Some(PengValue::Box(PengBox::Thread(thread))) => {
-            match &thread.result {
-                PengThreadResult::Returned(cell) => Ok(cell.clone()),
-                PengThreadResult::Pending => Ok(default),
-                PengThreadResult::Failed(e) => Err((**e).clone()),
-            }
-        }
+        Some(PengValue::Box(PengBox::Thread(thread))) => match &thread.result {
+            PengThreadResult::Returned(cell) => Ok(cell.clone()),
+            PengThreadResult::Pending => Ok(default),
+            PengThreadResult::Failed(e) => Err((**e).clone()),
+        },
 
         Some(PengValue::Box(PengBox::Vector(vector))) => {
             let index = match key_index {
@@ -615,12 +602,9 @@ pub fn is_finished(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinded
     };
 
     match ctx.get_value(receiver_ptr) {
-        Some(PengValue::Box(PengBox::Thread(thread))) => {
-            Ok(PengBinded::Mutable(PengCell::Bool(matches!(
-                thread.state,
-                PengThreadState::Finished
-            ))))
-        }
+        Some(PengValue::Box(PengBox::Thread(thread))) => Ok(PengBinded::Mutable(PengCell::Bool(
+            matches!(thread.state, PengThreadState::Finished),
+        ))),
 
         Some(_) => Err(PengError::ExpectedThread),
 
@@ -630,111 +614,75 @@ pub fn is_finished(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBinded
 
 // CUSTOM OPERATORS
 
-pub fn __add(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __add(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__add")
 }
 
-pub fn __sub(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __sub(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__sub")
 }
 
-pub fn __mul(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __mul(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__mul")
 }
 
-pub fn __div(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __div(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__div")
 }
 
-pub fn __pow(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __pow(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__pow")
 }
 
-pub fn __rem(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __rem(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__rem")
 }
 
-pub fn __neg(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __neg(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_unary_method(ctx, "__neg")
 }
 
-pub fn __concat(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __concat(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__concat")
 }
 
-pub fn __and(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __and(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__and")
 }
 
-pub fn __or(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __or(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__or")
 }
 
-pub fn __not(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __not(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_unary_method(ctx, "__not")
 }
 
-pub fn __eq(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __eq(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__eq")
 }
 
-pub fn __ne(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __ne(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__ne")
 }
 
-pub fn __gt(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __gt(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__gt")
 }
 
-pub fn __ge(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __ge(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__ge")
 }
 
-pub fn __lt(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __lt(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__lt")
 }
 
-pub fn __le(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __le(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     custom_binary_method(ctx, "__le")
 }
 
-pub fn __self(
-    ctx: &mut PengNativeFunctionCallContext,
-) -> Result<PengBindedCell, PengError> {
+pub fn __self(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     let receiver = match ctx.get_arg_cell(0) {
         Some(receiver) => receiver.clone(),
 
@@ -755,9 +703,7 @@ pub fn __self(
         }
     };
 
-    let name_ptr = ctx
-        .env_mut()
-        .ensure_pooled_name_ptr("__self".to_string());
+    let name_ptr = ctx.env_mut().ensure_pooled_name_ptr("__self".to_string());
 
     let method = match ctx.get_value(receiver_ptr) {
         Some(PengValue::Box(PengBox::Type(PengType::Custom(custom_type)))) => {

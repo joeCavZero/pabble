@@ -1,12 +1,7 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::thread;
-use std::time::{
-    Duration as StdDuration,
-    Instant as StdInstant,
-    SystemTime,
-    UNIX_EPOCH,
-};
+use std::time::{Duration as StdDuration, Instant as StdInstant, SystemTime, UNIX_EPOCH};
 
 use penguin::prelude::*;
 
@@ -25,33 +20,59 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let duration_type = duration_type_value(peng);
-    module.register_immutable_global(peng, "Duration", duration_type).unwrap();
+    module
+        .register_immutable_global(peng, "Duration", duration_type)
+        .unwrap();
 
     let instant_type = instant_type_value(peng);
-    module.register_immutable_global(peng, "Instant", instant_type).unwrap();
+    module
+        .register_immutable_global(peng, "Instant", instant_type)
+        .unwrap();
 
     let datetime_type = datetime_type_value(peng);
-    module.register_immutable_global(peng, "DateTime", datetime_type).unwrap();
+    module
+        .register_immutable_global(peng, "DateTime", datetime_type)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "now", now).unwrap();
+    module
+        .register_immutable_native_function(peng, "now", now)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "unix", unix).unwrap();
+    module
+        .register_immutable_native_function(peng, "unix", unix)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "millis", millis).unwrap();
+    module
+        .register_immutable_native_function(peng, "millis", millis)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "nanos", nanos).unwrap();
+    module
+        .register_immutable_native_function(peng, "nanos", nanos)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "monotonic_nanos", monotonic_nanos_native).unwrap();
+    module
+        .register_immutable_native_function(peng, "monotonic_nanos", monotonic_nanos_native)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "instant", instant).unwrap();
+    module
+        .register_immutable_native_function(peng, "instant", instant)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "duration", duration).unwrap();
+    module
+        .register_immutable_native_function(peng, "duration", duration)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "elapsed", elapsed).unwrap();
+    module
+        .register_immutable_native_function(peng, "elapsed", elapsed)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "elapsed_ms", elapsed_ms).unwrap();
+    module
+        .register_immutable_native_function(peng, "elapsed_ms", elapsed_ms)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "elapsed_nanos", elapsed_nanos).unwrap();
+    module
+        .register_immutable_native_function(peng, "elapsed_nanos", elapsed_nanos)
+        .unwrap();
 
     module
 }
@@ -100,9 +121,7 @@ fn duration_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Immutable(PengCell::Reference(add_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn instant_type_value(peng: &mut PengEnv) -> PengValue {
@@ -140,9 +159,7 @@ fn instant_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Immutable(PengCell::Reference(elapsed_nanos_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn datetime_type_value(peng: &mut PengEnv) -> PengValue {
@@ -199,9 +216,7 @@ fn datetime_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Immutable(PengCell::Reference(elapsed_nanos_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn now(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -243,7 +258,9 @@ fn nanos(_ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, Pen
 fn monotonic_nanos_native(
     _ctx: &mut PengNativeFunctionCallContext,
 ) -> Result<PengBindedCell, PengError> {
-    Ok(PengBindedCell::Mutable(PengCell::Uint(monotonic_nanos_value())))
+    Ok(PengBindedCell::Mutable(PengCell::Uint(
+        monotonic_nanos_value(),
+    )))
 }
 
 fn instant(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -503,21 +520,15 @@ fn duration_object(
     ctx: &mut PengNativeFunctionCallContext,
     millis: usize,
 ) -> Result<PengBindedCell, PengError> {
-    let sleep_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        duration_sleep,
-    )));
+    let sleep_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(duration_sleep)));
 
     let seconds_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
         duration_seconds,
     )));
 
-    let nanos_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        duration_nanos,
-    )));
+    let nanos_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(duration_nanos)));
 
-    let add_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        duration_add,
-    )));
+    let add_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(duration_add)));
 
     let millis_cell = PengBindedCell::Mutable(PengCell::Uint(millis));
     let sleep_cell = PengBindedCell::Immutable(PengCell::Reference(sleep_ptr));
@@ -541,9 +552,7 @@ fn instant_object(
     ctx: &mut PengNativeFunctionCallContext,
     nanos: usize,
 ) -> Result<PengBindedCell, PengError> {
-    let elapsed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        instant_elapsed,
-    )));
+    let elapsed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(instant_elapsed)));
 
     let elapsed_ms_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
         instant_elapsed_ms,
@@ -573,9 +582,7 @@ fn datetime_object(
     ctx: &mut PengNativeFunctionCallContext,
     data: TimeDateTimeData,
 ) -> Result<PengBindedCell, PengError> {
-    let format_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        datetime_format,
-    )));
+    let format_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(datetime_format)));
 
     let elapsed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
         datetime_elapsed,

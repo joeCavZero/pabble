@@ -4,7 +4,7 @@ use std::os::raw::{c_char, c_void};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 
-use libffi::middle::{Arg, Cif, CodePtr, Type, arg};
+use libffi::middle::{arg, Arg, Cif, CodePtr, Type};
 use libloading::Library;
 use penguin::prelude::*;
 
@@ -563,21 +563,15 @@ fn library_object(
 ) -> Result<PengBindedCell, PengError> {
     let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(library_close)));
 
-    let is_open_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        library_is_open,
-    )));
+    let is_open_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(library_is_open)));
 
-    let symbol_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        library_symbol,
-    )));
+    let symbol_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(library_symbol)));
 
     let has_symbol_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
         library_has_symbol,
     )));
 
-    let bind_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        library_bind,
-    )));
+    let bind_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(library_bind)));
 
     let kind_cell = utils::string_cell(ctx, "library".to_string());
 
@@ -687,9 +681,7 @@ fn buffer_object(
         buffer_write_byte,
     )));
 
-    let read_ptr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        buffer_read_ptr,
-    )));
+    let read_ptr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(buffer_read_ptr)));
 
     let write_ptr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
         buffer_write_ptr,

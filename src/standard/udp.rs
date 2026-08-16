@@ -51,11 +51,17 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let socket_type = socket_type_value(peng);
-    module.register_immutable_global(peng, "Socket", socket_type).unwrap();
+    module
+        .register_immutable_global(peng, "Socket", socket_type)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "bind", bind).unwrap();
+    module
+        .register_immutable_native_function(peng, "bind", bind)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "bind_async", bind_async).unwrap();
+    module
+        .register_immutable_native_function(peng, "bind_async", bind_async)
+        .unwrap();
 
     module
 }
@@ -170,7 +176,10 @@ fn socket_bind_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBind
 
 fn execute_bind_data(data: UdpSocketData, function_name: &str) -> Result<UdpSocketHandle, String> {
     if data.host.is_empty() {
-        return Err(format!("udp:{}() socket.host cannot be empty", function_name));
+        return Err(format!(
+            "udp:{}() socket.host cannot be empty",
+            function_name
+        ));
     }
 
     if data.port > u16::MAX as usize {
@@ -225,77 +234,84 @@ fn socket_handle_object(
     let set_write_timeout_handle = handle.clone();
     let set_non_blocking_handle = handle.clone();
 
-    let connect_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_connect(ctx, connect_handle.clone()),
-    )));
+    let connect_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_connect(ctx, connect_handle.clone())
+    })));
 
-    let connect_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_connect_async(ctx, connect_async_handle.clone()),
-    )));
+    let connect_async_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_connect_async(ctx, connect_async_handle.clone())
+        })));
 
-    let send_to_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_send_to(ctx, send_to_handle.clone()),
-    )));
+    let send_to_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_send_to(ctx, send_to_handle.clone())
+    })));
 
-    let send_to_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_send_to_async(ctx, send_to_async_handle.clone()),
-    )));
+    let send_to_async_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_send_to_async(ctx, send_to_async_handle.clone())
+        })));
 
-    let recv_from_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_recv_from(ctx, recv_from_handle.clone()),
-    )));
+    let recv_from_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_recv_from(ctx, recv_from_handle.clone())
+    })));
 
-    let recv_from_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_recv_from_async(ctx, recv_from_async_handle.clone()),
-    )));
+    let recv_from_async_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_recv_from_async(ctx, recv_from_async_handle.clone())
+        })));
 
-    let send_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_send(ctx, send_handle.clone()),
-    )));
+    let send_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_send(ctx, send_handle.clone())
+    })));
 
-    let send_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_send_async(ctx, send_async_handle.clone()),
-    )));
+    let send_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_send_async(ctx, send_async_handle.clone())
+    })));
 
-    let recv_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_recv(ctx, recv_handle.clone()),
-    )));
+    let recv_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_recv(ctx, recv_handle.clone())
+    })));
 
-    let recv_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_recv_async(ctx, recv_async_handle.clone()),
-    )));
+    let recv_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_recv_async(ctx, recv_async_handle.clone())
+    })));
 
-    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_close(ctx, close_handle.clone()),
-    )));
+    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_close(ctx, close_handle.clone())
+    })));
 
-    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_is_closed(ctx, is_closed_handle.clone()),
-    )));
+    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_is_closed(ctx, is_closed_handle.clone())
+    })));
 
-    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_local_addr(ctx, local_addr_handle.clone()),
-    )));
+    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_local_addr(ctx, local_addr_handle.clone())
+    })));
 
-    let peer_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_peer_addr(ctx, peer_addr_handle.clone()),
-    )));
+    let peer_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        socket_peer_addr(ctx, peer_addr_handle.clone())
+    })));
 
-    let set_broadcast_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_set_broadcast(ctx, set_broadcast_handle.clone()),
-    )));
+    let set_broadcast_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_set_broadcast(ctx, set_broadcast_handle.clone())
+        })));
 
-    let set_read_timeout_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_set_read_timeout(ctx, set_read_timeout_handle.clone()),
-    )));
+    let set_read_timeout_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_set_read_timeout(ctx, set_read_timeout_handle.clone())
+        })));
 
-    let set_write_timeout_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_set_write_timeout(ctx, set_write_timeout_handle.clone()),
-    )));
+    let set_write_timeout_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_set_write_timeout(ctx, set_write_timeout_handle.clone())
+        })));
 
-    let set_non_blocking_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| socket_set_non_blocking(ctx, set_non_blocking_handle.clone()),
-    )));
+    let set_non_blocking_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            socket_set_non_blocking(ctx, set_non_blocking_handle.clone())
+        })));
 
     utils::new_object(
         ctx,
@@ -376,22 +392,25 @@ fn socket_handle_object(
     )
 }
 
-fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<UdpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     let is_finished_state = state.clone();
     let get_state = state.clone();
     let error_state = state.clone();
 
-    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
-    )));
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_is_finished(ctx, is_finished_state.clone())
+    })));
 
-    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_get(ctx, get_state.clone()),
-    )));
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_get(ctx, get_state.clone())
+    })));
 
-    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_error(ctx, error_state.clone()),
-    )));
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_error(ctx, error_state.clone())
+    })));
 
     utils::new_object(
         ctx,
@@ -400,7 +419,10 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTask
                 "is_finished",
                 PengBindedCell::Immutable(PengCell::Reference(is_finished_ptr)),
             ),
-            ("get", PengBindedCell::Immutable(PengCell::Reference(get_ptr))),
+            (
+                "get",
+                PengBindedCell::Immutable(PengCell::Reference(get_ptr)),
+            ),
             (
                 "error",
                 PengBindedCell::Immutable(PengCell::Reference(error_ptr)),
@@ -409,7 +431,10 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTask
     )
 }
 
-fn socket_connect(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_connect(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let host = match utils::get_string_arg(ctx, 1) {
         Ok(host) => host,
         Err(e) => return Err(e),
@@ -461,7 +486,10 @@ fn socket_connect_async(
     task_object(ctx, state)
 }
 
-fn socket_send_to(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_send_to(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -506,7 +534,8 @@ fn socket_send_to_async(
     let thread_state = state.clone();
 
     thread::spawn(move || {
-        let result = match execute_socket_send_to(handle, data, host, port, "Socket.send_to_async") {
+        let result = match execute_socket_send_to(handle, data, host, port, "Socket.send_to_async")
+        {
             Ok(size) => Ok(UdpTaskValue::Size(size)),
             Err(e) => Err(e),
         };
@@ -582,7 +611,10 @@ fn socket_recv_from_async(
     task_object(ctx, state)
 }
 
-fn socket_send(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_send(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -624,7 +656,10 @@ fn socket_send_async(
     task_object(ctx, state)
 }
 
-fn socket_recv(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_recv(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -680,7 +715,10 @@ fn socket_recv_async(
     task_object(ctx, state)
 }
 
-fn socket_close(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_close(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.socket.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -695,7 +733,10 @@ fn socket_close(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandl
     utils::nil()
 }
 
-fn socket_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_is_closed(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.socket.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -708,7 +749,10 @@ fn socket_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketH
     Ok(PengBindedCell::Mutable(PengCell::Bool(locked.is_none())))
 }
 
-fn socket_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_local_addr(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let socket = match clone_socket_for_action(&handle, "Socket.local_addr") {
         Ok(Some(socket)) => socket,
         Ok(None) => return utils::nil(),
@@ -724,7 +768,10 @@ fn socket_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketH
     }
 }
 
-fn socket_peer_addr(ctx: &mut PengNativeFunctionCallContext, handle: UdpSocketHandle) -> Result<PengBindedCell, PengError> {
+fn socket_peer_addr(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: UdpSocketHandle,
+) -> Result<PengBindedCell, PengError> {
     let socket = match clone_socket_for_action(&handle, "Socket.peer_addr") {
         Ok(Some(socket)) => socket,
         Ok(None) => return utils::nil(),
@@ -833,7 +880,10 @@ fn socket_set_non_blocking(
     }
 }
 
-fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_is_finished(
+    _ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<UdpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => Ok(PengBindedCell::Mutable(PengCell::Bool(false))),
@@ -846,7 +896,10 @@ fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<U
     }
 }
 
-fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_get(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<UdpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     let result = match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => return utils::nil(),
@@ -870,7 +923,10 @@ fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskSta
     }
 }
 
-fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_error(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<UdpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             UdpTaskState::Running => utils::nil(),
@@ -887,7 +943,10 @@ fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<UdpTaskS
     }
 }
 
-fn packet_object(ctx: &mut PengNativeFunctionCallContext, packet: UdpPacketData) -> Result<PengBindedCell, PengError> {
+fn packet_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    packet: UdpPacketData,
+) -> Result<PengBindedCell, PengError> {
     let data = utils::string_cell(ctx, packet.data);
     let host = utils::string_cell(ctx, packet.host);
     let addr = utils::string_cell(ctx, packet.addr);
@@ -993,7 +1052,10 @@ fn execute_recv_from_socket(
     function_name: &str,
 ) -> Result<Option<UdpPacketData>, String> {
     if size == 0 {
-        return Err(format!("udp:{}() size must be greater than zero", function_name));
+        return Err(format!(
+            "udp:{}() size must be greater than zero",
+            function_name
+        ));
     }
 
     let mut buffer = vec![0u8; size];
@@ -1027,7 +1089,10 @@ fn execute_recv_socket(
     function_name: &str,
 ) -> Result<Option<String>, String> {
     if size == 0 {
-        return Err(format!("udp:{}() size must be greater than zero", function_name));
+        return Err(format!(
+            "udp:{}() size must be greater than zero",
+            function_name
+        ));
     }
 
     let mut buffer = vec![0u8; size];
@@ -1058,10 +1123,7 @@ fn clone_socket_for_action(
     let locked = match handle.socket.lock() {
         Ok(locked) => locked,
         Err(_) => {
-            return Err(format!(
-                "udp:{}() socket lock failed",
-                function_name
-            ));
+            return Err(format!("udp:{}() socket lock failed", function_name));
         }
     };
 

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
 
+use crate::debug::error::{format_peng_error_with_sources, PengErrorSources};
 use crate::project::*;
 use crate::standard::*;
 use penguin::prelude::*;
@@ -19,12 +20,14 @@ pub fn execute_from_entry(entry: Option<&String>) {
 
     let mut peng = PengEnv::new();
     let mut core = PengUnit::library();
+    let error_sources = PengErrorSources::new();
+    error_sources.insert_path(0, &entry_path);
 
     let std_registry = match standard::setup(&mut peng, &mut core) {
         Ok(std_registry) => std_registry,
 
         Err(e) => {
-            println!("{:#?}", e);
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     };
@@ -34,7 +37,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
 
         Err(e) => {
             eprintln!("Failed to setup raise:");
-            eprintln!("{e:#?}");
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     }
@@ -57,6 +60,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         &mut core,
         std_registry,
         import_cache,
+        error_sources.clone(),
         dependencies,
         entry_path.clone(),
     ) {
@@ -64,7 +68,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
 
         Err(e) => {
             eprintln!("Failed to setup import:");
-            eprintln!("{e:#?}");
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     }
@@ -75,10 +79,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
                 Ok(bytes) => bytes,
 
                 Err(e) => {
-                    eprintln!(
-                        "Failed to read '{}':",
-                        entry_path.to_string_lossy()
-                    );
+                    eprintln!("Failed to read '{}':", entry_path.to_string_lossy());
                     eprintln!("{e}");
                     return;
                 }
@@ -88,7 +89,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
                 Ok(unit) => unit,
 
                 Err(e) => {
-                    println!("{:#?}", e);
+                    eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
                     return;
                 }
             }
@@ -99,24 +100,17 @@ pub fn execute_from_entry(entry: Option<&String>) {
                 Ok(source) => source,
 
                 Err(e) => {
-                    eprintln!(
-                        "Failed to read '{}':",
-                        entry_path.to_string_lossy()
-                    );
+                    eprintln!("Failed to read '{}':", entry_path.to_string_lossy());
                     eprintln!("{e}");
                     return;
                 }
             };
 
-            match peng.load_program_from_source_using(
-                &source,
-                &core,
-                0,
-            ) {
+            match peng.load_program_from_source_using(&source, &core, 0) {
                 Ok(unit) => unit,
 
                 Err(e) => {
-                    println!("{:#?}", e);
+                    eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
                     return;
                 }
             }
@@ -127,7 +121,7 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(init) => init,
 
         Err(e) => {
-            println!("{:#?}", e);
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     };
@@ -136,20 +130,16 @@ pub fn execute_from_entry(entry: Option<&String>) {
         Ok(_) => {}
 
         Err(e) => {
-            println!("{:#?}", e);
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
             return;
         }
     }
 
-    match peng.run_global_function(
-        "main",
-        &unit,
-        Vec::new(),
-    ) {
+    match peng.run_global_function("main", &unit, Vec::new()) {
         Ok(_) => {}
 
         Err(e) => {
-            println!("{:#?}", e);
+            eprintln!("{}", format_peng_error_with_sources(e, &error_sources));
         }
     }
 }

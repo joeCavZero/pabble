@@ -78,9 +78,7 @@ fn install_dependency(
     mode: PabbleDependencyCommandMode,
 ) -> Result<PathBuf, String> {
     match dependency {
-        PabbleDependency::Version(version) => {
-            install_version_dependency(name, version, mode)
-        }
+        PabbleDependency::Version(version) => install_version_dependency(name, version, mode),
 
         PabbleDependency::Detailed(info) => {
             if let Some(path) = &info.path {
@@ -95,10 +93,7 @@ fn install_dependency(
                 return install_version_dependency(name, version, mode);
             }
 
-            Err(format!(
-                "dependency '{}' has no path, git or version",
-                name
-            ))
+            Err(format!("dependency '{}' has no path, git or version", name))
         }
     }
 }
@@ -114,10 +109,7 @@ fn install_path_dependency(name: &str, path: &str) -> Result<PathBuf, String> {
         return resolve_project_entry_from_root(name, &path_buf);
     }
 
-    Err(format!(
-        "dependency '{}' path '{}' not found",
-        name, path
-    ))
+    Err(format!("dependency '{}' path '{}' not found", name, path))
 }
 
 fn install_version_dependency(
@@ -218,10 +210,7 @@ fn install_git_dependency(
             Ok(()) => {}
 
             Err(e) => {
-                return Err(format!(
-                    "failed to create git dependency cache: {}",
-                    e
-                ));
+                return Err(format!("failed to create git dependency cache: {}", e));
             }
         }
 
@@ -257,10 +246,7 @@ fn create_dependency_cache_dirs() -> Result<(), String> {
         Ok(()) => {}
 
         Err(e) => {
-            return Err(format!(
-                "failed to create git dependency cache: {}",
-                e
-            ));
+            return Err(format!("failed to create git dependency cache: {}", e));
         }
     }
 
@@ -268,10 +254,7 @@ fn create_dependency_cache_dirs() -> Result<(), String> {
         Ok(()) => {}
 
         Err(e) => {
-            return Err(format!(
-                "failed to create registry dependency cache: {}",
-                e
-            ));
+            return Err(format!("failed to create registry dependency cache: {}", e));
         }
     }
 
@@ -283,10 +266,7 @@ fn pabble_dependency_cache_dir() -> Result<PathBuf, String> {
         Ok(current_dir) => current_dir,
 
         Err(e) => {
-            return Err(format!(
-                "failed to get current directory: {}",
-                e
-            ));
+            return Err(format!("failed to get current directory: {}", e));
         }
     };
 
@@ -315,10 +295,7 @@ fn pabble_registry_root() -> Result<PathBuf, String> {
         Ok(current_dir) => current_dir,
 
         Err(e) => {
-            return Err(format!(
-                "failed to get current directory: {}",
-                e
-            ));
+            return Err(format!("failed to get current directory: {}", e));
         }
     };
 
@@ -328,9 +305,7 @@ fn pabble_registry_root() -> Result<PathBuf, String> {
         return Ok(local_registry);
     }
 
-    Err(
-        "No registry found. Set PEBBLE_REGISTRY_PATH or create .pabble/registry".to_string(),
-    )
+    Err("No registry found. Set PEBBLE_REGISTRY_PATH or create .pabble/registry".to_string())
 }
 
 fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf, String> {
@@ -341,10 +316,7 @@ fn resolve_project_entry_from_root(name: &str, root: &PathBuf) -> Result<PathBuf
             Ok(project) => project,
 
             Err(e) => {
-                return Err(format!(
-                    "failed to load dependency '{}': {}",
-                    name, e
-                ));
+                return Err(format!("failed to load dependency '{}': {}", name, e));
             }
         };
 
@@ -397,11 +369,7 @@ fn sanitize_dependency_segment(value: &str) -> String {
     }
 }
 
-fn git_clone_dependency(
-    name: &str,
-    git: &str,
-    dependency_root: &PathBuf,
-) -> Result<(), String> {
+fn git_clone_dependency(name: &str, git: &str, dependency_root: &PathBuf) -> Result<(), String> {
     let status = match Command::new("git")
         .arg("clone")
         .arg(git)
@@ -428,10 +396,7 @@ fn git_clone_dependency(
     }
 }
 
-fn git_pull_dependency(
-    name: &str,
-    dependency_root: &PathBuf,
-) -> Result<(), String> {
+fn git_pull_dependency(name: &str, dependency_root: &PathBuf) -> Result<(), String> {
     let status = match Command::new("git")
         .arg("-C")
         .arg(dependency_root)

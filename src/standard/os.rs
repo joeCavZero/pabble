@@ -37,37 +37,69 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
 
     let process_type = process_type_value(peng);
 
-    module.register_immutable_global(peng, "Process", process_type).unwrap();
+    module
+        .register_immutable_global(peng, "Process", process_type)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "name", name).unwrap();
+    module
+        .register_immutable_native_function(peng, "name", name)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "family", family).unwrap();
+    module
+        .register_immutable_native_function(peng, "family", family)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "arch", arch).unwrap();
+    module
+        .register_immutable_native_function(peng, "arch", arch)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "current_dir", current_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "current_dir", current_dir)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "home_dir", home_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "home_dir", home_dir)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "temp_dir", temp_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "temp_dir", temp_dir)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "pid", pid).unwrap();
+    module
+        .register_immutable_native_function(peng, "pid", pid)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "args", args).unwrap();
+    module
+        .register_immutable_native_function(peng, "args", args)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "cpu_count", cpu_count).unwrap();
+    module
+        .register_immutable_native_function(peng, "cpu_count", cpu_count)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "get_env", get_env).unwrap();
+    module
+        .register_immutable_native_function(peng, "get_env", get_env)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "set_env", set_env).unwrap();
+    module
+        .register_immutable_native_function(peng, "set_env", set_env)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "remove_env", remove_env).unwrap();
+    module
+        .register_immutable_native_function(peng, "remove_env", remove_env)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "envs", envs).unwrap();
+    module
+        .register_immutable_native_function(peng, "envs", envs)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "run", run).unwrap();
+    module
+        .register_immutable_native_function(peng, "run", run)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "spawn", spawn).unwrap();
+    module
+        .register_immutable_native_function(peng, "spawn", spawn)
+        .unwrap();
 
     module
 }
@@ -93,10 +125,7 @@ fn process_type_value(peng: &mut PengEnv) -> PengValue {
         fields: HashMap::new(),
     })));
 
-    fields.insert(
-        peng.ensure_pooled_name_ptr("program".to_string()),
-        program,
-    );
+    fields.insert(peng.ensure_pooled_name_ptr("program".to_string()), program);
 
     fields.insert(
         peng.ensure_pooled_name_ptr("args".to_string()),
@@ -128,9 +157,7 @@ fn process_type_value(peng: &mut PengEnv) -> PengValue {
         PengBindedCell::Immutable(PengCell::Reference(spawn_ptr)),
     );
 
-    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })))
+    PengValue::Box(PengBox::Type(PengType::Custom(PengCustomType { fields })))
 }
 
 fn name(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
@@ -174,7 +201,7 @@ fn temp_dir(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, P
 
 fn pid(_ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Uint(
-        std::process::id() as usize,
+        std::process::id() as usize
     )))
 }
 
@@ -186,9 +213,7 @@ fn args(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengE
         values.push(PengBindedCell::Mutable(PengCell::Reference(string_ptr)));
     }
 
-    let vector_ptr = ctx.create_box(PengBox::Vector(PengVector {
-        values,
-    }));
+    let vector_ptr = ctx.create_box(PengBox::Vector(PengVector { values }));
 
     Ok(PengBindedCell::Mutable(PengCell::Reference(vector_ptr)))
 }
@@ -400,17 +425,15 @@ fn execute_process_data(
             };
 
             match child.stdin.take() {
-                Some(mut child_stdin) => {
-                    match child_stdin.write_all(stdin.as_bytes()) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            return Err(format!(
-                                "os:{}() failed to write process stdin: {}",
-                                function_name, e
-                            ));
-                        }
+                Some(mut child_stdin) => match child_stdin.write_all(stdin.as_bytes()) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return Err(format!(
+                            "os:{}() failed to write process stdin: {}",
+                            function_name, e
+                        ));
                     }
-                }
+                },
 
                 None => {
                     return Err(format!(
@@ -498,17 +521,17 @@ fn task_object(
     let get_state = state.clone();
     let error_state = state.clone();
 
-    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
-    )));
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_is_finished(ctx, is_finished_state.clone())
+    })));
 
-    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_get(ctx, get_state.clone()),
-    )));
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_get(ctx, get_state.clone())
+    })));
 
-    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_error(ctx, error_state.clone()),
-    )));
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_error(ctx, error_state.clone())
+    })));
 
     utils::new_object(
         ctx,

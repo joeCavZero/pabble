@@ -11,33 +11,59 @@ use super::utils;
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_immutable_native_function(peng, "read", read).unwrap();
-    module.register_immutable_native_function(peng, "write", write).unwrap();
-    module.register_immutable_native_function(peng, "append", append).unwrap();
+    module
+        .register_immutable_native_function(peng, "read", read)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "write", write)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "append", append)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "exists", exists).unwrap();
-    module.register_immutable_native_function(peng, "is_file", is_file).unwrap();
-    module.register_immutable_native_function(peng, "is_dir", is_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "exists", exists)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "is_file", is_file)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "is_dir", is_dir)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "create_dir", create_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "create_dir", create_dir)
+        .unwrap();
     module
         .register_immutable_native_function(peng, "create_dir_all", create_dir_all)
         .unwrap();
     module
         .register_immutable_native_function(peng, "remove_file", remove_file)
         .unwrap();
-    module.register_immutable_native_function(peng, "remove_dir", remove_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "remove_dir", remove_dir)
+        .unwrap();
     module
         .register_immutable_native_function(peng, "remove_dir_all", remove_dir_all)
         .unwrap();
 
-    module.register_immutable_native_function(peng, "list_dir", list_dir).unwrap();
+    module
+        .register_immutable_native_function(peng, "list_dir", list_dir)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "copy", copy).unwrap();
-    module.register_immutable_native_function(peng, "rename", rename).unwrap();
+    module
+        .register_immutable_native_function(peng, "copy", copy)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "rename", rename)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "metadata", metadata).unwrap();
-    module.register_immutable_native_function(peng, "file_size", file_size).unwrap();
+    module
+        .register_immutable_native_function(peng, "metadata", metadata)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "file_size", file_size)
+        .unwrap();
 
     module
         .register_immutable_native_function(peng, "current_dir", current_dir)
@@ -46,15 +72,25 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         .register_immutable_native_function(peng, "set_current_dir", set_current_dir)
         .unwrap();
 
-    module.register_immutable_native_function(peng, "absolute", absolute).unwrap();
+    module
+        .register_immutable_native_function(peng, "absolute", absolute)
+        .unwrap();
     module
         .register_immutable_native_function(peng, "canonicalize", canonicalize)
         .unwrap();
 
-    module.register_immutable_native_function(peng, "join", join).unwrap();
-    module.register_immutable_native_function(peng, "file_name", file_name).unwrap();
-    module.register_immutable_native_function(peng, "extension", extension).unwrap();
-    module.register_immutable_native_function(peng, "parent", parent).unwrap();
+    module
+        .register_immutable_native_function(peng, "join", join)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "file_name", file_name)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "extension", extension)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "parent", parent)
+        .unwrap();
 
     module
 }

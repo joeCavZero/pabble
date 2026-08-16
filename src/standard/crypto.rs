@@ -6,44 +6,94 @@ use base64::{
 };
 use hmac::{Hmac, KeyInit, Mac};
 use md5::Md5;
+use rand::RngExt;
 use sha1::Sha1;
 use sha2::{Digest, Sha256, Sha384, Sha512};
-use rand::RngExt;
 
 use super::utils;
 
 pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
-    module.register_immutable_native_function(peng, "sha1", sha1).unwrap();
-    module.register_immutable_native_function(peng, "sha256", sha256).unwrap();
-    module.register_immutable_native_function(peng, "sha384", sha384).unwrap();
-    module.register_immutable_native_function(peng, "sha512", sha512).unwrap();
-    module.register_immutable_native_function(peng, "md5", md5).unwrap();
+    module
+        .register_immutable_native_function(peng, "sha1", sha1)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "sha256", sha256)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "sha384", sha384)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "sha512", sha512)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "md5", md5)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "hmac_sha256", hmac_sha256).unwrap();
-    module.register_immutable_native_function(peng, "hmac_sha512", hmac_sha512).unwrap();
-    module.register_immutable_native_function(peng, "verify_hmac_sha256", verify_hmac_sha256).unwrap();
-    module.register_immutable_native_function(peng, "verify_hmac_sha512", verify_hmac_sha512).unwrap();
+    module
+        .register_immutable_native_function(peng, "hmac_sha256", hmac_sha256)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "hmac_sha512", hmac_sha512)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "verify_hmac_sha256", verify_hmac_sha256)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "verify_hmac_sha512", verify_hmac_sha512)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "base64_encode", base64_encode).unwrap();
-    module.register_immutable_native_function(peng, "base64_decode", base64_decode).unwrap();
-    module.register_immutable_native_function(peng, "base64_decode_string", base64_decode_string).unwrap();
+    module
+        .register_immutable_native_function(peng, "base64_encode", base64_encode)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "base64_decode", base64_decode)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "base64_decode_string", base64_decode_string)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "base64_url_encode", base64_url_encode).unwrap();
-    module.register_immutable_native_function(peng, "base64_url_decode", base64_url_decode).unwrap();
-    module.register_immutable_native_function(peng, "base64_url_decode_string", base64_url_decode_string).unwrap();
+    module
+        .register_immutable_native_function(peng, "base64_url_encode", base64_url_encode)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "base64_url_decode", base64_url_decode)
+        .unwrap();
+    module
+        .register_immutable_native_function(
+            peng,
+            "base64_url_decode_string",
+            base64_url_decode_string,
+        )
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "hex_encode", hex_encode).unwrap();
-    module.register_immutable_native_function(peng, "hex_decode", hex_decode).unwrap();
-    module.register_immutable_native_function(peng, "hex_decode_string", hex_decode_string).unwrap();
+    module
+        .register_immutable_native_function(peng, "hex_encode", hex_encode)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "hex_decode", hex_decode)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "hex_decode_string", hex_decode_string)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "random_bytes", random_bytes).unwrap();
-    module.register_immutable_native_function(peng, "random_hex", random_hex).unwrap();
-    module.register_immutable_native_function(peng, "random_base64", random_base64).unwrap();
-    module.register_immutable_native_function(peng, "uuid_v4", uuid_v4).unwrap();
+    module
+        .register_immutable_native_function(peng, "random_bytes", random_bytes)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "random_hex", random_hex)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "random_base64", random_base64)
+        .unwrap();
+    module
+        .register_immutable_native_function(peng, "uuid_v4", uuid_v4)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "equals", equals).unwrap();
+    module
+        .register_immutable_native_function(peng, "equals", equals)
+        .unwrap();
 
     module
 }
@@ -106,7 +156,9 @@ fn hmac_sha512(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell
     utils::string(ctx, bytes_to_hex(&bytes))
 }
 
-fn verify_hmac_sha256(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn verify_hmac_sha256(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     let key = match get_bytes_arg(ctx, 0, "verify_hmac_sha256") {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -135,7 +187,9 @@ fn verify_hmac_sha256(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBin
     utils::bool_cell(constant_time_eq(&actual_bytes, &expected_bytes))
 }
 
-fn verify_hmac_sha512(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn verify_hmac_sha512(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     let key = match get_bytes_arg(ctx, 0, "verify_hmac_sha512") {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -192,7 +246,9 @@ fn base64_decode(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCe
     bytes_to_vector(ctx, bytes)
 }
 
-fn base64_decode_string(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn base64_decode_string(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     let text = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -249,7 +305,9 @@ fn base64_url_decode(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBind
     bytes_to_vector(ctx, bytes)
 }
 
-fn base64_url_decode_string(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn base64_url_decode_string(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     let text = match utils::get_string_arg(ctx, 0) {
         Ok(value) => value,
         Err(e) => return Err(e),
@@ -422,10 +480,7 @@ fn hmac_sha256_bytes(key: &[u8], message: &[u8]) -> Result<Vec<u8>, PengError> {
     let mut mac = match HmacSha256::new_from_slice(key) {
         Ok(value) => value,
         Err(e) => {
-            return Err(crypto_error(
-                "hmac_sha256",
-                format!("invalid key: {}", e),
-            ));
+            return Err(crypto_error("hmac_sha256", format!("invalid key: {}", e)));
         }
     };
 
@@ -440,10 +495,7 @@ fn hmac_sha512_bytes(key: &[u8], message: &[u8]) -> Result<Vec<u8>, PengError> {
     let mut mac = match HmacSha512::new_from_slice(key) {
         Ok(value) => value,
         Err(e) => {
-            return Err(crypto_error(
-                "hmac_sha512",
-                format!("invalid key: {}", e),
-            ));
+            return Err(crypto_error("hmac_sha512", format!("invalid key: {}", e)));
         }
     };
 

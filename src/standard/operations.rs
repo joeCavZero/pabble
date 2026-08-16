@@ -112,10 +112,7 @@ fn value_impl_type(
         PengType::Thread => matches!(value, PengValue::Box(PengBox::Thread(_))),
 
         PengType::Type => {
-            matches!(
-                value,
-                PengValue::Box(PengBox::Type(_))
-            )
+            matches!(value, PengValue::Box(PengBox::Type(_)))
         }
 
         PengType::Vector(expected_inner) => match value {
@@ -154,12 +151,10 @@ fn value_impl_type(
         },
 
         PengType::Custom(custom_type) => match value {
-            PengValue::Box(PengBox::Object(obj)) => {
-                custom_type
-                    .fields
-                    .keys()
-                    .all(|name| obj.fields.contains_key(name))
-            }
+            PengValue::Box(PengBox::Object(obj)) => custom_type
+                .fields
+                .keys()
+                .all(|name| obj.fields.contains_key(name)),
 
             _ => false,
         },

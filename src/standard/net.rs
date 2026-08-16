@@ -38,37 +38,49 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let address_type = address_type_value(peng);
-    module.register_immutable_global(peng, "Address", address_type).unwrap();
+    module
+        .register_immutable_global(peng, "Address", address_type)
+        .unwrap();
 
-    module.register_immutable_global(
-        peng,
-        "LOCALHOST",
-        PengValue::Box(PengBox::String("localhost".to_string())),
-    ).unwrap();
+    module
+        .register_immutable_global(
+            peng,
+            "LOCALHOST",
+            PengValue::Box(PengBox::String("localhost".to_string())),
+        )
+        .unwrap();
 
-    module.register_immutable_global(
-        peng,
-        "IPV4_LOOPBACK",
-        PengValue::Box(PengBox::String("127.0.0.1".to_string())),
-    ).unwrap();
+    module
+        .register_immutable_global(
+            peng,
+            "IPV4_LOOPBACK",
+            PengValue::Box(PengBox::String("127.0.0.1".to_string())),
+        )
+        .unwrap();
 
-    module.register_immutable_global(
-        peng,
-        "IPV6_LOOPBACK",
-        PengValue::Box(PengBox::String("::1".to_string())),
-    ).unwrap();
+    module
+        .register_immutable_global(
+            peng,
+            "IPV6_LOOPBACK",
+            PengValue::Box(PengBox::String("::1".to_string())),
+        )
+        .unwrap();
 
-    module.register_immutable_global(
-        peng,
-        "IPV4_UNSPECIFIED",
-        PengValue::Box(PengBox::String("0.0.0.0".to_string())),
-    ).unwrap();
+    module
+        .register_immutable_global(
+            peng,
+            "IPV4_UNSPECIFIED",
+            PengValue::Box(PengBox::String("0.0.0.0".to_string())),
+        )
+        .unwrap();
 
-    module.register_immutable_global(
-        peng,
-        "IPV6_UNSPECIFIED",
-        PengValue::Box(PengBox::String("::".to_string())),
-    ).unwrap();
+    module
+        .register_immutable_global(
+            peng,
+            "IPV6_UNSPECIFIED",
+            PengValue::Box(PengBox::String("::".to_string())),
+        )
+        .unwrap();
 
     module
         .register_immutable_native_function(peng, "local_ip", local_ip)
@@ -78,39 +90,73 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
         .register_immutable_native_function(peng, "local_addr", local_addr)
         .unwrap();
 
-    module.register_immutable_native_function(peng, "hostname", hostname).unwrap();
+    module
+        .register_immutable_native_function(peng, "hostname", hostname)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "join", join).unwrap();
+    module
+        .register_immutable_native_function(peng, "join", join)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "split", split).unwrap();
+    module
+        .register_immutable_native_function(peng, "split", split)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "parse", parse).unwrap();
+    module
+        .register_immutable_native_function(peng, "parse", parse)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "normalize", normalize).unwrap();
+    module
+        .register_immutable_native_function(peng, "normalize", normalize)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "resolve", resolve).unwrap();
+    module
+        .register_immutable_native_function(peng, "resolve", resolve)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "resolve_one", resolve_one).unwrap();
+    module
+        .register_immutable_native_function(peng, "resolve_one", resolve_one)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "resolve_async", resolve_async).unwrap();
+    module
+        .register_immutable_native_function(peng, "resolve_async", resolve_async)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "ip_info", ip_info).unwrap();
+    module
+        .register_immutable_native_function(peng, "ip_info", ip_info)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_ip", is_ip).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_ip", is_ip)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_ipv4", is_ipv4).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_ipv4", is_ipv4)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_ipv6", is_ipv6).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_ipv6", is_ipv6)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_loopback", is_loopback).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_loopback", is_loopback)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_private", is_private).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_private", is_private)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_unspecified", is_unspecified).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_unspecified", is_unspecified)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "is_multicast", is_multicast).unwrap();
+    module
+        .register_immutable_native_function(peng, "is_multicast", is_multicast)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "valid_port", valid_port).unwrap();
+    module
+        .register_immutable_native_function(peng, "valid_port", valid_port)
+        .unwrap();
 
     module
 }
@@ -447,17 +493,17 @@ fn task_object(
     let get_state = state.clone();
     let error_state = state.clone();
 
-    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
-    )));
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_is_finished(ctx, is_finished_state.clone())
+    })));
 
-    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_get(ctx, get_state.clone()),
-    )));
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_get(ctx, get_state.clone())
+    })));
 
-    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_error(ctx, error_state.clone()),
-    )));
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_error(ctx, error_state.clone())
+    })));
 
     utils::new_object(
         ctx,
@@ -466,7 +512,10 @@ fn task_object(
                 "is_finished",
                 PengBindedCell::Immutable(PengCell::Reference(is_finished_ptr)),
             ),
-            ("get", PengBindedCell::Immutable(PengCell::Reference(get_ptr))),
+            (
+                "get",
+                PengBindedCell::Immutable(PengCell::Reference(get_ptr)),
+            ),
             (
                 "error",
                 PengBindedCell::Immutable(PengCell::Reference(error_ptr)),
@@ -616,7 +665,10 @@ fn resolved_address_to_object(
             ("addr", addr_cell),
             ("ip", ip_cell),
             ("family", family_cell),
-            ("is_ip", PengBindedCell::Mutable(PengCell::Bool(ip.is_some()))),
+            (
+                "is_ip",
+                PengBindedCell::Mutable(PengCell::Bool(ip.is_some())),
+            ),
             ("is_ipv4", PengBindedCell::Mutable(PengCell::Bool(is_ipv4))),
             ("is_ipv6", PengBindedCell::Mutable(PengCell::Bool(is_ipv6))),
             (
@@ -854,7 +906,10 @@ fn split_address_string(address: &str, function_name: &str) -> Result<NetAddress
     };
 
     if host_part.is_empty() {
-        return Err(format!("net:{}() address host cannot be empty", function_name));
+        return Err(format!(
+            "net:{}() address host cannot be empty",
+            function_name
+        ));
     }
 
     let port = match parse_port_string(port_part, function_name) {
@@ -876,10 +931,7 @@ fn parse_port_string(value: &str, function_name: &str) -> Result<usize, String> 
     let port = match value.parse::<usize>() {
         Ok(port) => port,
         Err(_) => {
-            return Err(format!(
-                "net:{}() invalid port '{}'",
-                function_name, value
-            ));
+            return Err(format!("net:{}() invalid port '{}'", function_name, value));
         }
     };
 
@@ -1035,8 +1087,5 @@ fn local_addr(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell,
         }
     };
 
-    resolved_address_to_object(
-        ctx,
-        socket_addr_to_data(addr, addr.ip().to_string()),
-    )
+    resolved_address_to_object(ctx, socket_addr_to_data(addr, addr.ip().to_string()))
 }

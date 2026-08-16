@@ -61,18 +61,30 @@ pub fn setup(peng: &mut PengEnv) -> PengUnit {
     let mut module = PengUnit::library();
 
     let client_type = client_type_value(peng);
-    module.register_immutable_global(peng, "Client", client_type).unwrap();
+    module
+        .register_immutable_global(peng, "Client", client_type)
+        .unwrap();
 
     let server_type = server_type_value(peng);
-    module.register_immutable_global(peng, "Server", server_type).unwrap();
+    module
+        .register_immutable_global(peng, "Server", server_type)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "connect", connect).unwrap();
+    module
+        .register_immutable_native_function(peng, "connect", connect)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "connect_async", connect_async).unwrap();
+    module
+        .register_immutable_native_function(peng, "connect_async", connect_async)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "listen", listen).unwrap();
+    module
+        .register_immutable_native_function(peng, "listen", listen)
+        .unwrap();
 
-    module.register_immutable_native_function(peng, "listen_async", listen_async).unwrap();
+    module
+        .register_immutable_native_function(peng, "listen_async", listen_async)
+        .unwrap();
 
     module
 }
@@ -281,7 +293,9 @@ fn client_connect(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedC
     connect(ctx)
 }
 
-fn client_connect_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn client_connect_async(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     connect_async(ctx)
 }
 
@@ -289,7 +303,9 @@ fn server_listen(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCe
     listen(ctx)
 }
 
-fn server_listen_async(ctx: &mut PengNativeFunctionCallContext) -> Result<PengBindedCell, PengError> {
+fn server_listen_async(
+    ctx: &mut PengNativeFunctionCallContext,
+) -> Result<PengBindedCell, PengError> {
     listen_async(ctx)
 }
 
@@ -298,7 +314,10 @@ fn execute_connect_data(
     function_name: &str,
 ) -> Result<TcpConnectionHandle, String> {
     if client.host.is_empty() {
-        return Err(format!("tcp:{}() client.host cannot be empty", function_name));
+        return Err(format!(
+            "tcp:{}() client.host cannot be empty",
+            function_name
+        ));
     }
 
     if client.port > u16::MAX as usize {
@@ -353,9 +372,15 @@ fn execute_connect_data(
     })
 }
 
-fn execute_listen_data(server: TcpServerData, function_name: &str) -> Result<TcpServerHandle, String> {
+fn execute_listen_data(
+    server: TcpServerData,
+    function_name: &str,
+) -> Result<TcpServerHandle, String> {
     if server.host.is_empty() {
-        return Err(format!("tcp:{}() server.host cannot be empty", function_name));
+        return Err(format!(
+            "tcp:{}() server.host cannot be empty",
+            function_name
+        ));
     }
 
     if server.port > u16::MAX as usize {
@@ -415,66 +440,72 @@ fn connection_object(
     let set_write_timeout_handle = handle.clone();
     let set_non_blocking_handle = handle.clone();
 
-    let read_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_read(ctx, read_handle.clone()),
-    )));
+    let read_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_read(ctx, read_handle.clone())
+    })));
 
-    let read_line_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_read_line(ctx, read_line_handle.clone()),
-    )));
+    let read_line_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_read_line(ctx, read_line_handle.clone())
+    })));
 
-    let read_all_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_read_all(ctx, read_all_handle.clone()),
-    )));
+    let read_all_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_read_all(ctx, read_all_handle.clone())
+    })));
 
-    let read_byte_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_read_byte(ctx, read_byte_handle.clone()),
-    )));
+    let read_byte_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_read_byte(ctx, read_byte_handle.clone())
+    })));
 
-    let write_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_write(ctx, write_handle.clone()),
-    )));
+    let write_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_write(ctx, write_handle.clone())
+    })));
 
-    let write_line_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_write_line(ctx, write_line_handle.clone()),
-    )));
+    let write_line_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_write_line(ctx, write_line_handle.clone())
+    })));
 
-    let flush_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_flush(ctx, flush_handle.clone()),
-    )));
+    let flush_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_flush(ctx, flush_handle.clone())
+    })));
 
-    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_close(ctx, close_handle.clone()),
-    )));
+    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_close(ctx, close_handle.clone())
+    })));
 
-    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_is_closed(ctx, is_closed_handle.clone()),
-    )));
+    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_is_closed(ctx, is_closed_handle.clone())
+    })));
 
-    let peer_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_peer_addr(ctx, peer_addr_handle.clone()),
-    )));
+    let peer_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_peer_addr(ctx, peer_addr_handle.clone())
+    })));
 
-    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_local_addr(ctx, local_addr_handle.clone()),
-    )));
+    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        connection_local_addr(ctx, local_addr_handle.clone())
+    })));
 
-    let set_read_timeout_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_set_read_timeout(ctx, set_read_timeout_handle.clone()),
-    )));
+    let set_read_timeout_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            connection_set_read_timeout(ctx, set_read_timeout_handle.clone())
+        })));
 
-    let set_write_timeout_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_set_write_timeout(ctx, set_write_timeout_handle.clone()),
-    )));
+    let set_write_timeout_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            connection_set_write_timeout(ctx, set_write_timeout_handle.clone())
+        })));
 
-    let set_non_blocking_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| connection_set_non_blocking(ctx, set_non_blocking_handle.clone()),
-    )));
+    let set_non_blocking_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            connection_set_non_blocking(ctx, set_non_blocking_handle.clone())
+        })));
 
     utils::new_object(
         ctx,
         vec![
-            ("read", PengBindedCell::Immutable(PengCell::Reference(read_ptr))),
+            (
+                "read",
+                PengBindedCell::Immutable(PengCell::Reference(read_ptr)),
+            ),
             (
                 "read_line",
                 PengBindedCell::Immutable(PengCell::Reference(read_line_ptr)),
@@ -531,32 +562,36 @@ fn connection_object(
     )
 }
 
-fn server_handle_object(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
+fn server_handle_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpServerHandle,
+) -> Result<PengBindedCell, PengError> {
     let accept_handle = handle.clone();
     let accept_async_handle = handle.clone();
     let close_handle = handle.clone();
     let is_closed_handle = handle.clone();
     let local_addr_handle = handle.clone();
 
-    let accept_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| server_accept(ctx, accept_handle.clone()),
-    )));
+    let accept_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        server_accept(ctx, accept_handle.clone())
+    })));
 
-    let accept_async_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| server_accept_async(ctx, accept_async_handle.clone()),
-    )));
+    let accept_async_ptr =
+        ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+            server_accept_async(ctx, accept_async_handle.clone())
+        })));
 
-    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| server_close(ctx, close_handle.clone()),
-    )));
+    let close_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        server_close(ctx, close_handle.clone())
+    })));
 
-    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| server_is_closed(ctx, is_closed_handle.clone()),
-    )));
+    let is_closed_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        server_is_closed(ctx, is_closed_handle.clone())
+    })));
 
-    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| server_local_addr(ctx, local_addr_handle.clone()),
-    )));
+    let local_addr_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        server_local_addr(ctx, local_addr_handle.clone())
+    })));
 
     utils::new_object(
         ctx,
@@ -585,22 +620,25 @@ fn server_handle_object(ctx: &mut PengNativeFunctionCallContext, handle: TcpServ
     )
 }
 
-fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_object(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<TcpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     let is_finished_state = state.clone();
     let get_state = state.clone();
     let error_state = state.clone();
 
-    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_is_finished(ctx, is_finished_state.clone()),
-    )));
+    let is_finished_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_is_finished(ctx, is_finished_state.clone())
+    })));
 
-    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_get(ctx, get_state.clone()),
-    )));
+    let get_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_get(ctx, get_state.clone())
+    })));
 
-    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(
-        move |ctx| task_error(ctx, error_state.clone()),
-    )));
+    let error_ptr = ctx.create_box(PengBox::Function(PengFunction::new_native(move |ctx| {
+        task_error(ctx, error_state.clone())
+    })));
 
     utils::new_object(
         ctx,
@@ -609,7 +647,10 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTask
                 "is_finished",
                 PengBindedCell::Immutable(PengCell::Reference(is_finished_ptr)),
             ),
-            ("get", PengBindedCell::Immutable(PengCell::Reference(get_ptr))),
+            (
+                "get",
+                PengBindedCell::Immutable(PengCell::Reference(get_ptr)),
+            ),
             (
                 "error",
                 PengBindedCell::Immutable(PengCell::Reference(error_ptr)),
@@ -618,7 +659,10 @@ fn task_object(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTask
     )
 }
 
-fn connection_read(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
+fn connection_read(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpConnectionHandle,
+) -> Result<PengBindedCell, PengError> {
     let size = match utils::get_uint_arg(ctx, 1) {
         Ok(size) => size,
         Err(e) => return Err(e),
@@ -818,7 +862,10 @@ fn connection_read_byte(
     }
 }
 
-fn connection_write(ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
+fn connection_write(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpConnectionHandle,
+) -> Result<PengBindedCell, PengError> {
     let data = match utils::get_string_arg(ctx, 1) {
         Ok(data) => data,
         Err(e) => return Err(e),
@@ -841,7 +888,10 @@ fn connection_write_line(
     write_to_connection(handle, data.as_bytes(), "Connection.write_line")
 }
 
-fn connection_flush(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
+fn connection_flush(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpConnectionHandle,
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -865,7 +915,10 @@ fn connection_flush(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnect
     }
 }
 
-fn connection_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpConnectionHandle) -> Result<PengBindedCell, PengError> {
+fn connection_close(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpConnectionHandle,
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.stream.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1046,7 +1099,10 @@ fn connection_set_non_blocking(
     }
 }
 
-fn server_accept(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
+fn server_accept(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpServerHandle,
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1119,7 +1175,10 @@ fn server_accept_async(
     task_object(ctx, state)
 }
 
-fn server_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
+fn server_close(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpServerHandle,
+) -> Result<PengBindedCell, PengError> {
     let mut locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1134,7 +1193,10 @@ fn server_close(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandl
     utils::nil()
 }
 
-fn server_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
+fn server_is_closed(
+    _ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpServerHandle,
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1147,7 +1209,10 @@ fn server_is_closed(_ctx: &mut PengNativeFunctionCallContext, handle: TcpServerH
     Ok(PengBindedCell::Mutable(PengCell::Bool(locked.is_none())))
 }
 
-fn server_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerHandle) -> Result<PengBindedCell, PengError> {
+fn server_local_addr(
+    ctx: &mut PengNativeFunctionCallContext,
+    handle: TcpServerHandle,
+) -> Result<PengBindedCell, PengError> {
     let locked = match handle.listener.lock() {
         Ok(locked) => locked,
         Err(_) => {
@@ -1171,7 +1236,10 @@ fn server_local_addr(ctx: &mut PengNativeFunctionCallContext, handle: TcpServerH
     }
 }
 
-fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_is_finished(
+    _ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<TcpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => Ok(PengBindedCell::Mutable(PengCell::Bool(false))),
@@ -1184,7 +1252,10 @@ fn task_is_finished(_ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<T
     }
 }
 
-fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_get(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<TcpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     let result = match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => return utils::nil(),
@@ -1205,7 +1276,10 @@ fn task_get(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskSta
     }
 }
 
-fn task_error(ctx: &mut PengNativeFunctionCallContext, state: Arc<Mutex<TcpTaskState>>) -> Result<PengBindedCell, PengError> {
+fn task_error(
+    ctx: &mut PengNativeFunctionCallContext,
+    state: Arc<Mutex<TcpTaskState>>,
+) -> Result<PengBindedCell, PengError> {
     match state.lock() {
         Ok(locked) => match &*locked {
             TcpTaskState::Running => utils::nil(),
@@ -1464,16 +1538,12 @@ fn server_data_from_fields(
         Err(e) => return Err(e),
     };
 
-    let non_blocking_connections = match get_optional_bool_field(
-        ctx,
-        fields,
-        "non_blocking_connections",
-        function_name,
-    ) {
-        Ok(Some(value)) => value,
-        Ok(None) => false,
-        Err(e) => return Err(e),
-    };
+    let non_blocking_connections =
+        match get_optional_bool_field(ctx, fields, "non_blocking_connections", function_name) {
+            Ok(Some(value)) => value,
+            Ok(None) => false,
+            Err(e) => return Err(e),
+        };
 
     Ok(TcpServerData {
         host,

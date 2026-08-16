@@ -1,7 +1,7 @@
-use crate::dependencies;
-use crate::initialize;
-use crate::execute::*;
 use crate::compile::*;
+use crate::dependencies;
+use crate::execute::*;
+use crate::initialize;
 
 #[derive(Debug)]
 pub enum PabbleCLI {

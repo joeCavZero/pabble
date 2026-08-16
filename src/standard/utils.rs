@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::ErrorKind,
-    time::Duration,
-};
+use std::{collections::HashMap, io::ErrorKind, time::Duration};
 
 use penguin::prelude::*;
 
@@ -40,9 +36,7 @@ pub fn new_type(
         fields.insert(name_ptr, value);
     }
 
-    let ptr = ctx.create_box(PengBox::Type(PengType::Custom(PengCustomType {
-        fields,
-    })));
+    let ptr = ctx.create_box(PengBox::Type(PengType::Custom(PengCustomType { fields })));
 
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
 }
@@ -55,14 +49,17 @@ pub fn cell_to_string(
             Some(PengValue::Box(PengBox::String(value))) => Ok(value.clone()),
 
             Some(_) => Err(PengError::CannotCallValue(
-                "expected string value".to_string())),
+                "expected string value".to_string(),
+            )),
 
             None => Err(PengError::CannotCallValue(
-                "got missing heap string value".to_string())),
+                "got missing heap string value".to_string(),
+            )),
         },
 
         _ => Err(PengError::CannotCallValue(
-            "expected string value".to_string())),
+            "expected string value".to_string(),
+        )),
     }
 }
 
@@ -74,7 +71,7 @@ pub fn cell_to_uint(cell: &PengBindedCell) -> Result<usize, PengError> {
             if *value < 0 {
                 return Err(PengError::CannotCallValue(
                     "expected non-negative integer value".to_string(),
-                    ));
+                ));
             }
 
             Ok(*value as usize)
@@ -83,7 +80,7 @@ pub fn cell_to_uint(cell: &PengBindedCell) -> Result<usize, PengError> {
         PengCell::Byte(value) => Ok(*value as usize),
 
         _ => Err(PengError::CannotCallValue(
-            "expected unsigned integer value".to_string()
+            "expected unsigned integer value".to_string(),
         )),
     }
 }
@@ -115,7 +112,7 @@ pub fn cell_to_bool(cell: &PengBindedCell) -> Result<bool, PengError> {
         PengCell::Bool(value) => Ok(*value),
 
         _ => Err(PengError::CannotCallValue(
-            "expected bool value".to_string()
+            "expected bool value".to_string(),
         )),
     }
 }
@@ -131,23 +128,21 @@ pub fn cell_to_number(
         PengCell::Float32(v) => Ok(*v as f64),
         PengCell::Float64(v) => Ok(*v),
 
-        PengCell::Reference(ptr) => {
-            match ctx.get_value(*ptr) {
-                Some(PengValue::Cell(PengCell::Int(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Uint(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Byte(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Float32(v))) => Ok(*v as f64),
-                Some(PengValue::Cell(PengCell::Float64(v))) => Ok(*v),
+        PengCell::Reference(ptr) => match ctx.get_value(*ptr) {
+            Some(PengValue::Cell(PengCell::Int(v))) => Ok(*v as f64),
+            Some(PengValue::Cell(PengCell::Uint(v))) => Ok(*v as f64),
+            Some(PengValue::Cell(PengCell::Byte(v))) => Ok(*v as f64),
+            Some(PengValue::Cell(PengCell::Float32(v))) => Ok(*v as f64),
+            Some(PengValue::Cell(PengCell::Float64(v))) => Ok(*v),
 
-                Some(_) => Err(PengError::CannotCallValue(
-                    "expected number argument".to_string(),
-                )),
+            Some(_) => Err(PengError::CannotCallValue(
+                "expected number argument".to_string(),
+            )),
 
-                None => Err(PengError::CannotCallValue(
-                    "heap value not found".to_string(),
-                )),
-            }
-        }
+            None => Err(PengError::CannotCallValue(
+                "heap value not found".to_string(),
+            )),
+        },
 
         _ => Err(PengError::CannotCallValue(
             "expected number argument".to_string(),
@@ -164,15 +159,17 @@ pub fn get_object_fields_from_cell(
             Some(PengValue::Box(PengBox::Object(object))) => Ok(object.fields.clone()),
 
             Some(_) => Err(PengError::CannotCallValue(
-                "expected object value".to_string())),
+                "expected object value".to_string(),
+            )),
 
             None => Err(PengError::CannotCallValue(
                 "got missing heap object value".to_string(),
-                )),
+            )),
         },
 
         _ => Err(PengError::CannotCallValue(
-            "expected object value".to_string())),
+            "expected object value".to_string(),
+        )),
     }
 }
 
@@ -204,7 +201,10 @@ pub fn f64_cell(value: f64) -> Result<PengBindedCell, PengError> {
     Ok(PengBindedCell::Mutable(PengCell::Float64(value)))
 }
 
-pub fn string(ctx: &mut PengNativeFunctionCallContext, value: String) -> Result<PengBindedCell, PengError> {
+pub fn string(
+    ctx: &mut PengNativeFunctionCallContext,
+    value: String,
+) -> Result<PengBindedCell, PengError> {
     Ok(string_cell(ctx, value))
 }
 
@@ -237,7 +237,10 @@ pub fn object_from_string_pairs(
     object_from_fields(ctx, fields)
 }
 
-pub fn vector(ctx: &mut PengNativeFunctionCallContext, values: Vec<PengBindedCell>) -> Result<PengBindedCell, PengError> {
+pub fn vector(
+    ctx: &mut PengNativeFunctionCallContext,
+    values: Vec<PengBindedCell>,
+) -> Result<PengBindedCell, PengError> {
     let ptr = ctx.create_box(PengBox::Vector(PengVector { values }));
 
     Ok(PengBindedCell::Mutable(PengCell::Reference(ptr)))
@@ -261,7 +264,6 @@ pub fn is_temporary_read_error(e: &std::io::Error) -> bool {
     e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::TimedOut
 }
 
-
 pub fn get_map_field(
     ctx: &mut PengNativeFunctionCallContext,
     fields: &HashMap<PengNamePoolPtr, PengBindedCell>,
@@ -280,9 +282,7 @@ pub fn get_object_field(
     let name_ptr = ctx.env_mut().ensure_pooled_name_ptr(name.to_string());
 
     match ctx.env_mut().get_heap_mut(object_ptr) {
-        Some(PengValue::Box(PengBox::Object(object))) => {
-            Ok(object.fields.get(&name_ptr).cloned())
-        }
+        Some(PengValue::Box(PengBox::Object(object))) => Ok(object.fields.get(&name_ptr).cloned()),
         Some(_) => Err(PengError::CannotCallValue(format!(
             "object field access expected object for '{}'",
             name
@@ -301,9 +301,7 @@ pub fn get_arg_cell(
 ) -> Result<PengBindedCell, PengError> {
     match ctx.get_arg_cell(index) {
         Some(arg) => Ok(arg.clone()),
-        None => Err(PengError::CannotCallValue(
-            "missing argument".to_string(),
-        )),
+        None => Err(PengError::CannotCallValue("missing argument".to_string())),
     }
 }
 
@@ -319,10 +317,7 @@ pub fn get_string_arg(
     cell_to_string(ctx, &arg)
 }
 
-pub fn get_uint_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-) -> Result<usize, PengError> {
+pub fn get_uint_arg(ctx: &PengNativeFunctionCallContext, index: usize) -> Result<usize, PengError> {
     let arg = match get_arg_cell(ctx, index) {
         Ok(arg) => arg,
         Err(e) => return Err(e),
@@ -331,10 +326,7 @@ pub fn get_uint_arg(
     cell_to_uint(&arg)
 }
 
-pub fn get_int_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-) -> Result<isize, PengError> {
+pub fn get_int_arg(ctx: &PengNativeFunctionCallContext, index: usize) -> Result<isize, PengError> {
     let arg = match get_arg_cell(ctx, index) {
         Ok(arg) => arg,
         Err(e) => return Err(e),
@@ -343,10 +335,7 @@ pub fn get_int_arg(
     cell_to_int(&arg)
 }
 
-pub fn get_bool_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-) -> Result<bool, PengError> {
+pub fn get_bool_arg(ctx: &PengNativeFunctionCallContext, index: usize) -> Result<bool, PengError> {
     let arg = match get_arg_cell(ctx, index) {
         Ok(arg) => arg,
         Err(e) => return Err(e),
@@ -384,10 +373,7 @@ pub fn binary_f64(
     Ok(PengBindedCell::Mutable(PengCell::Float64(op(left, right))))
 }
 
-pub fn get_number_arg(
-    ctx: &PengNativeFunctionCallContext,
-    index: usize,
-) -> Result<f64, PengError> {
+pub fn get_number_arg(ctx: &PengNativeFunctionCallContext, index: usize) -> Result<f64, PengError> {
     let arg = match get_arg_cell(ctx, index) {
         Ok(arg) => arg,
         Err(e) => return Err(e),
@@ -514,12 +500,10 @@ pub fn custom_unary_method(
             match object.fields.get(&method_name_ptr) {
                 Some(method) => Ok(method.clone()),
 
-                None => {
-                    Err(PengError::CannotCallValue(format!(
-                        "{} not implemented",
-                        method_name
-                    )))
-                }
+                None => Err(PengError::CannotCallValue(format!(
+                    "{} not implemented",
+                    method_name
+                ))),
             }
         }
 
@@ -527,21 +511,17 @@ pub fn custom_unary_method(
             match custom_type.fields.get(&method_name_ptr) {
                 Some(method) => Ok(method.clone()),
 
-                None => {
-                    Err(PengError::CannotCallValue(format!(
-                        "{} not implemented",
-                        method_name
-                    )))
-                }
+                None => Err(PengError::CannotCallValue(format!(
+                    "{} not implemented",
+                    method_name
+                ))),
             }
         }
 
-        Some(_) => {
-            Err(PengError::CannotCallValue(format!(
-                "{} not supported for this value",
-                method_name
-            )))
-        }
+        Some(_) => Err(PengError::CannotCallValue(format!(
+            "{} not supported for this value",
+            method_name
+        ))),
 
         None => Err(PengError::HeapValueNotFound(receiver_ptr)),
     }
