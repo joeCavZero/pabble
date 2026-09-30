@@ -47,6 +47,14 @@ pub fn setup(peng: &mut PengEnv, unit: &mut PengUnit) -> Result<PabbleStandardRe
         }
     }
 
+    match unit.register_immutable_native_operation(peng, "is", operations::is) {
+        Ok(()) => {}
+
+        Err(e) => {
+            return Err(e);
+        }
+    }
+
     match register_customs(peng, unit) {
         Ok(()) => {}
 

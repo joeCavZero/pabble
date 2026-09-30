@@ -1,0 +1,97 @@
+import("io") as io
+
+type Person {
+    var __type = Person
+    var name: string
+    var age: int
+
+    func greet(self: Person) -> string {
+        return "hello, "..self.name
+    }
+}
+
+type User {
+    var __type = User
+    var name: string
+    var age: int
+}
+
+func print_check(name: string, result: bool) {
+    io:println(name..": "..(result as type string))
+}
+
+func main() {
+    var i: int = 10
+    var u: uint = 20u
+    var f: f64 = 10.5f64
+    var s: string = "penguin"
+    var b: bool = true
+
+    var p: Person = Person:{
+        name = "Joe",
+        age = 21
+    }
+
+    var p2: Person = Person:{
+        name = "Mary",
+        age = 30
+    }
+
+    var user: User = User:{
+        name = "Joe",
+        age = 21
+    }
+
+
+    io:println("primitive types")
+    print_check("i is int", i is type int)
+    print_check("i is uint", i is type uint)
+
+    print_check("u is uint", u is type uint)
+    print_check("u is int", u is type int)
+
+    print_check("f is f64", f is type f64)
+    print_check("f is f32", f is type f32)
+
+    print_check("s is string", s is type string)
+    print_check("s is int", s is type int)
+
+    print_check("b is bool", b is type bool)
+
+
+    io:println("")
+    io:println("generic types")
+
+    print_check("i is any", i is type any)
+    print_check("type int is type", type int is type type)
+
+
+    io:println("")
+    io:println("custom types")
+
+    print_check("p is Person", p is type Person)
+    print_check("p is User", p is type User)
+
+    print_check("p2 is Person", p2 is type Person)
+    print_check("user is User", user is type User)
+    print_check("user is Person", user is type Person)
+
+
+    io:println("")
+    io:println("fields")
+
+    print_check("p.name is string", p.name is type string)
+    print_check("p.age is int", p.age is type int)
+
+    print_check("p.greet() is string", p.greet() is type string)
+
+
+    io:println("")
+    io:println("impls versus is")
+
+    print_check("p impls Person", p impls type Person)
+    print_check("p is Person", p is type Person)
+
+    print_check("user impls Person", user impls type Person)
+    print_check("user is Person", user is type Person)
+}
